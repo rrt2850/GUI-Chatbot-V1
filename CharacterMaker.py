@@ -100,7 +100,7 @@ def makeCharacter(
     3. If a variable is already specified in this list [{presetTraits}], you don't need to generate it (if the list is empty generate everything)
     4. You MUST create an outfit for the character specifying each of the relevant variables (as shown in response format)
         a. specify things that relate to the outfit even if they aren't visible from the outside, underwear for example
-        b. when specifying something with a specific color, make sure to include what it is. For example, "red hair, blue eyes" is better than "red, blue"
+        b. when specifying something with a specific color, you MUST include what it is. For example, "red hair, blue eyes" instead of "red, blue"
     5. Height must be specified in inches
     6. IMPORTANT: all characters must be over 18 and not in high school
 

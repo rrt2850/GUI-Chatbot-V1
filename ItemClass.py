@@ -28,3 +28,11 @@ class Item:
         }
     def __str__(self):
         return f"""[name="{self.name}" quantity="{self.quantity}"]"""
+    
+    def __repr__(self):
+        return f"""Item:[name="{self.name}" quantity="{self.quantity}"]"""
+    
+    def __eq__(self, other):
+        if isinstance(other, Item):
+            return self.name == other.name and self.description == other.description
+        return False

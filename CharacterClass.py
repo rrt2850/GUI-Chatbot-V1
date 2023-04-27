@@ -1,3 +1,8 @@
+import difflib
+import pprint
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from ItemClass import Item
 import re
 
@@ -84,32 +89,57 @@ class Character:
         """
     
     def equip(self, outfitSlot:str = None, item: str = None):
-        if outfitSlot in self.outfit:
-            temp = self.outfit[outfitSlot]
-            if temp == None or temp.lower() != "none":
+        if outfitSlot == None:
+            return (False, (None,"error: slot not specified"))
+        if item == None:
+            return (False, (None,"error: item not specified"))
+        
+        outfitSlot = outfitSlot.lower()
+
+        if outfitSlot in self.outfit.keys():
+            temp = self.outfit.get(outfitSlot)
+            if temp != None and temp.lower() != "none":
                 return (False, (None,"error: slot already occupied"))
             if item == None or item.lower() == "none":
                 return (False, (None,"error: item not specified"))
-            if item not in self.inventory:
-                return (False, (None,"error: item not in inventory"))
             
-            self.inventory.remove(item)
-            self.outfit[outfitSlot] = item
+            tempItem = None
+            for i in self.inventory:
+                if i.name == item:
+                    tempItem = i
+                    break
+
+            if tempItem is None:
+                return (False, (self, f"{item} is not in {self.name}'s inventory, try checking the inventory contents"))
+            
+            self.inventory.remove(tempItem)
+            self.outfit[outfitSlot] = tempItem.description
             return (True, (self, f"{self.name} has equipped {item} to {outfitSlot}. {self.name}'s_inventory= {self.inventory}, {self.name}'s_outfit= {self.outfit}"))
+        return (False, (None,"error: slot not found, try checking the character template"))
         
     def unequip(self, outfitSlot:str = None):
-        if outfitSlot in self.outfit:
-            temp = self.outfit[outfitSlot]
+        if outfitSlot == None:
+            return (False, (None,"error: slot not specified"))
+        outfitSlot = outfitSlot.lower()
+        if outfitSlot in self.outfit.keys():
+            temp = self.outfit.get(outfitSlot)
             if temp == None or temp.lower() == "none":
                 return (False, (None,"error: slot already empty"))
-            self.inventory.append(temp)
+            
+            item = Item(name=f"{self.name}'s {outfitSlot}", description=temp)
+            item.quantity = 1
+            self.inventory.append(item)
             self.outfit[outfitSlot] = None
             return (True, (self, f"{self.name} has unequipped {temp} from {outfitSlot}. {self.name}'s_inventory= {self.inventory}, {self.name}'s_outfit= {self.outfit}"))
+        return (False, (None,"error: slot not found"))
 
     def increaseAffection(self, amount: int = 1):
         try:
             self.affection += amount
-            if self.affection > 0 and self.affection <= 25: self.relationToPlayer = "Acquaintance"
+            if self.affection <= -100: self.relationToPlayer = "Enemy"
+            elif self.affection < 0 and self.affection > -100: self.relationToPlayer = "Dislikes You"
+            elif self.affection == 0: self.relationToPlayer = "Stranger"
+            elif self.affection > 0 and self.affection <= 25: self.relationToPlayer = "Acquaintance"
             elif self.affection > 25 and self.affection <= 50: self.relationToPlayer = "Friend"
             elif self.affection > 100 and self.affection <= 200: self.relationToPlayer = "Close Friend"
             elif self.affection > 200 and self.affection <= 250: self.relationToPlayer = "Best Friend"
@@ -138,7 +168,7 @@ class Character:
         if not attribute or attribute == "":
             return (False, (None, "error: attribute not specified"))
         
-        if type(amount) != str or type(amount) != int:
+        if type(amount) != str and type(amount) != int:
             return (False, (None, "error: amount is not an integer"))
     
         try:
@@ -152,6 +182,58 @@ class Character:
             return self.increaseArousal(amount)
         elif attribute.lower() == "exhibitionism":
             return self.increaseExhibitionism(amount)
+        else:
+            return (False, (None, "error: attribute not recognized"))
+    
+    def decreaseAffection(self, amount: int = 1):
+        try:
+            self.affection -= amount
+            if self.affection <= -100: self.relationToPlayer = "Enemy"
+            elif self.affection < 0 and self.affection > -100: self.relationToPlayer = "Dislikes You"
+            elif self.affection == 0: self.relationToPlayer = "Stranger"
+            elif self.affection > 0 and self.affection <= 25: self.relationToPlayer = "Acquaintance"
+            elif self.affection > 25 and self.affection <= 50: self.relationToPlayer = "Friend"
+            elif self.affection > 100 and self.affection <= 200: self.relationToPlayer = "Close Friend"
+            elif self.affection > 200 and self.affection <= 250: self.relationToPlayer = "Best Friend"
+            elif self.affection > 250: self.relationToPlayer = "Lover"
+            else: self.relationToPlayer = "Stranger"
+
+            return (True, (self, f"{self.name}'s affection has decreased by {amount}."))
+        except:
+            return (False, (None, "something went wrong decreasing affection: check if amount is an integer"))
+        
+    def decreaseArousal(self, amount: int = 1):
+        try:
+            self.arousal -= amount
+            return (True, (self, f"{self.name}'s arousal has decreased by {amount}."))
+        except:
+            return (False, (None, "something went wrong decreasing arousal: check if amount is an integer"))
+        
+    def decreaseExhibitionism(self, amount: int = 1):
+        try:
+            self.exhibitionism -= amount
+            return (True, (self, f"{self.name}'s exhibitionism has decreased by {amount}."))
+        except:
+            return (False, (None, "something went wrong decreasing exhibitionism: check if amount is an integer"))
+        
+    def decreaseAttribute(self, attribute: str = "", amount:int =0):
+        if not attribute or attribute == "":
+            return (False, (None, "error: attribute not specified"))
+        
+        if type(amount) != str and type(amount) != int:
+            return (False, (None, "error: amount is not an integer"))
+    
+        try:
+            amount = int(amount)
+        except:
+            return (False, (None, "error: amount is not an integer"))
+        
+        if attribute.lower() == "affection":
+            return self.decreaseAffection(amount)
+        elif attribute.lower() == "arousal":
+            return self.decreaseArousal(amount)
+        elif attribute.lower() == "exhibitionism":
+            return self.decreaseExhibitionism(amount)
         else:
             return (False, (None, "error: attribute not recognized"))
         
@@ -174,35 +256,116 @@ class Character:
         if item == None:
             return (False, (None, "error: item not specified"))
         try:
-            if item.quantity <= 0:
+            if item.quantity != "all" and item.quantity <= 0:
                 return (False, (None, "error: item quantity is less than or equal to 0"))
             if item in self.inventory:
                 temp = self.inventory[self.inventory.index(item)]
-                temp.quantity -= item.quantity
-                if temp.quantity <= 0:
+
+                if item.quantity == "all":
+                    print(f"removing all {item.name} from inventory")
                     self.inventory.remove(temp)
+                else:
+                    temp.quantity -= item.quantity
+                    if temp.quantity <= 0:
+                        self.inventory.remove(temp)
+                return (True, (self, f"{self.name} has removed {item.name}x{item.quantity} from their inventory. {self.name}'s_inventory= {self.inventory}"))
             else:
                 return (False, (None, "error: item not in inventory"))
-            return (True, (self, f"{self.name} has removed {item.name}x{item.quantity} from their inventory. {self.name}'s_inventory= {self.inventory}"))
         except:
             return (False, (None, "error: item not removed from inventory"))
 
-    def addToMemory(self, key: str=None, memory:str=None):
-        if key == None or memory == None:
-            return (False, (None, "error: key or memory not specified"))
-        try:
-            if key in self.memory.keys():
-                temp = self.memory[key]
-                temp.append(memory)
-                self.memory[key] = memory
-            else:
-                self.memory[key] = [memory]
-            return (True, (self, f"{self.name} has added a memory to their memory bank. {self.name}'s_memories=[{self.memory.keys()}]"))
-        except:
-            return (False, (None, "error: memory not added to memory bank"))
+    def addToMemory(self, key: str = None, memory: str = None, tags: list = None):
+        if key is None or memory is None:
+            return False, (None, "error: key or memory not specified")
 
+        if tags is None:
+            tags = []
+
+        try:
+            if key in self.memory:
+                temp = self.memory[key]['content']
+                
+                # Check if the memory content already exists
+                if memory not in temp:
+                    temp.append(memory)
+                    self.memory[key]['content'] = temp
+                    
+                # Update the tags
+                self.memory[key]['tags'] = list(set(self.memory[key]['tags']).union(set(tags)))
+            else:
+                self.memory[key] = {
+                    "content": [memory],
+                    "tags": tags
+                }
+            return True, (self, f"{self.name} has added a memory to their memory bank. {self.name}'s_memories=[{list(self.memory.keys())}]")
+        except:
+            return False, (None, "error: memory not added to memory bank")
+
+    def remember(self, key: str=None):
+        if key == None:
+            return (False, (None, "error: key not specified"))
+        try:
+            keys= self.memory.keys()
+            for index in range(len(keys)):
+                if key in keys[index]:
+                    key = keys[index]
+                    break
+
+            if key in self.memory.keys():
+                temp = self.memory.get(key)
+                return (True, (self, f"{self.name} remembers {key}: {temp}"))
+            else:
+                return (False, (None, "error: key not found"))
+        except:
+            return (False, (None, "error: memory not retrieved from memory bank"))
+        
+    def stringSimilarity(self, a, b):
+        return difflib.SequenceMatcher(None, a, b).ratio()
+
+    def searchMemories(self, query: str):
+        queryWords = set(query.lower().split())
+        memoryScores = []
+
+        for key, memory in self.memory.items():
+            contentWords = set(' '.join(memory['content']).lower().split())
+            tagWords = set([tag.lower() for tag in memory['tags']])
+            allWords = contentWords | tagWords
+            score = 0
+            count = 0
+
+            for queryWord in queryWords:
+                max_similarity = max([self.stringSimilarity(queryWord, word) for word in allWords])
+                if max_similarity > 0.5:
+                    count += 1
+                score += max_similarity
+
+            count /= len(queryWords)
+            
+            #score *= count
+            memoryScores.append((key, count))
+        print(memoryScores)
+        sortedMemories = sorted(memoryScores, key=lambda x: x[1], reverse=True)
+        print(sortedMemories)
+        return [memory[0] for memory in sortedMemories if memory[1] > 0.5]
+
+    def getRelevantMemories(self, key: str=None):
+        if key == None:
+            return (False, (None, "error: key not specified"))
+        try:
+            temp = self.searchMemories(key)
+            if len(temp) == 0:
+                return (False, (None, "error: no relevant memories found"))
+
+            return (True, (self, f"{self.name}'s relevant memory keys for '{key}': {str(temp)}"))
+        except Exception as e:
+            print(e)
+            return (False, (None, "error: memory not retrieved from memory bank"))
+    
     def getRelationship(self):
-        return (self, f"{self.name}'s relationship with player =\"{self.relationToPlayer}\"")
+        try:
+            return(True, (self, f"{self.name}'s relationship with player =\"{self.relationToPlayer}\""))
+        except:
+            return (False, (None, "error: relationship not found"))
 
     def knows(self):
         temp = ""
@@ -323,3 +486,45 @@ class Character:
             "outfit": self.outfit
         }
 
+    def template():
+        return r"""
+        name="character name":
+            characterType="datable"
+            description="description"
+            backstory="backstory"
+            age="age"
+            gender="gender"
+            sexuality="sexuality"
+            height="height"
+            breastSize="breast size"
+            hairStyle="hair style"
+            hairColor="hair color"
+            eyeColor="eye color"
+            skinColor="skin color"
+            tropes="character tropes separated by commas"
+            outfitSummary="outfit summary"
+            parents:[]
+            friends:[]
+            enemies:[]
+            inventory:[]
+            memory:{}
+            affection=0
+            exhibitionism=0
+            arousal=0
+            relationToPlayer="relation to player"
+            outfit={
+                    top:"outfit top",
+                    bottom:"outfit bottom",
+                    socks:"outfit socks if applicable",
+                    shoes:"outfit shoes if applicable",
+                    head:"outfit headware if applicable",
+                    face:"outfit faceware if applicable",
+                    bra:"outfit bra if applicable",
+                    underwear:"outfit underwear",
+                    neckwear:"outfit neckwear if applicable",
+                    ring:"outfit ring if applicable",
+                    wristware:"outfit wristware if applicable",
+                    waistware:"outfit waistware if applicable",
+                    ankleware:"outfit ankleware if applicable"
+                }
+            """
