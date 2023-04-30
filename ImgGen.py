@@ -310,8 +310,8 @@ def img_to_img(
     scale_factor,
     filepath="",):
     device = autocuda.auto_cuda()
-    #dtype = torch.float16 if "cuda" in device else torch.float32
-    dtype = torch.float32
+    dtype = torch.float16 if "cuda" in device else torch.float32
+    #dtype = torch.float32
     global last_mode
     global pipe
     global current_model_path
@@ -360,13 +360,12 @@ def img_to_img(
         print(e)
     
     result.images[0].save(
-            
             "imgs/result-{}.png".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f"))
         )
     if scale_factor > 1:
         if scale == "ESRGAN4x":
             print("scaling image")
-            fp32 = True #if device == "cpu" else False
+            fp32 = True if device == "cpu" else False
             result.images[0] = realEsrgan(
                 input_dir=result.images[0],
                 suffix="",
@@ -433,15 +432,15 @@ def genStanding(filepath: str = None, posValues:str = None, negValues:str = None
 
 if __name__ == "__main__":
     model_name = "anything v4.5"
-    prompt = "detailed, sprite sheet, spritesheet, reference sheet, multiple girls, black hair, wavy hair, small breasts"
+    prompt = "detailed, white background, boku no hero academia style, lawyer, standing, 1girl, full body, vertical, old woman, gothic, sundress, twintails"
     guidance = 17
     steps = 30
-    width = 2000
-    height = 2000
+    width = 768
+    height = 1024
     seed=0
-    img="spriteSheet.png"
-    strength=.7
-    neg_prompt="""shirt, bad result, worst, random, invalid, inaccurate, imperfect, blurry, deformed, disfigured, mutation, mutated, ugly, out of focus, bad anatomy, text, error,
+    img="prompt.jpg"
+    strength=1.0
+    neg_prompt="""background, bad result, worst, random, invalid, inaccurate, imperfect, blurry, deformed, disfigured, mutation, mutated, ugly, out of focus, bad anatomy, text, error,
                 extra digit, fewer digits, worst quality, low quality, normal quality, noise, jpeg artifact, compression artifact, signature, watermark, username, logo, 
                 low resolution, worst resolution, bad resolution, normal resolution, bad detail, bad details, bad lighting, bad shadow, bad shading, bad background,
                 worst background."""

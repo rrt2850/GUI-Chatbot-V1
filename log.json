@@ -1,0 +1,42 @@
+[
+    {
+        "prompt": {
+            "GOAL": ["To be determined"],
+            "HISTORY": [],
+            "ACTIONS": [],
+            "THOUGHT": [],
+            "INPUT": ["Aiko gets 4 oreos from the pantry"]
+        },
+        "completion": {
+            "GOAL": ["Put 4 oreos in Aiko's inventory"],
+            "HISTORY": ["Aiko gets 4 oreos from the pantry"],
+            "ACTIONS": [{
+                "function": "AddToInventory",
+                "arguments": ["Aiko", "oreos", 4]
+                }],
+            "THOUGHT": ["Aiko wants to add 4 oreos to her inventory, so I will use the AddToInventory tool to add them."],
+            "INPUT": "",
+            "FINAL MESSAGE": "Aiko failed to add 4 oreos to her inventory"
+        }
+    },
+    {
+        "prompt": {
+            "GOAL": ["Put 4 oreos in Aiko's inventory"],
+            "HISTORY": ["Aiko gets 4 oreos from the pantry"],
+            "ACTIONS": ["AddToInventory(Aiko, oreos, 4)"],
+            "THOUGHT": ["Aiko wants to add 4 oreos to her inventory, so I will use the AddToInventory tool to add them."],
+            "INPUT": "That item does not exist, please create it first"
+        },
+        "completion": {
+            "GOAL": ["Put 4 oreos in Aiko's inventory"],
+            "HISTORY": ["Aiko gets 4 oreos from the pantry", "AddToInventory(Aiko, oreos, 4)"],
+            "ACTIONS": [{
+                "function": "CreateItem",
+                "arguments": ["oreos", "A delicious chocolate sandwich cookie"]
+                }],
+            "THOUGHT": ["The oreos item does not exist, so I will use the CreateItem tool to create it."],
+            "INPUT": "",
+            "FINAL MESSAGE": "Aiko failed to add 4 oreos to her inventory because the oreos item does not exist, failed to create oreos item"
+        }
+    }
+]

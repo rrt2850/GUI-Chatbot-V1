@@ -18,6 +18,7 @@ build/
 
 .env
 imgs/
+imgsOld/
 
 gfpgan/weights/parsing_parsenet.pth
 gfpgan/weights/detection_Resnet50_Final.pth
