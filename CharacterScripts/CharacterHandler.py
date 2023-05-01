@@ -2,63 +2,17 @@ import copy
 import difflib
 import json
 import os
+import sys
 import re
 from typing import Union
 import openai
 
-from CharacterClass import Character, Name
-from CharacterMaker import Player, makeCharacter
-from ItemClass import Item
+from SharedVariables import SharedVariables
+from CharacterScripts.CharacterClass import Character, Name
+from CharacterScripts.CharacterMaker import Player, makeCharacter
+from WorldScripts.ItemClass import Item
 
-promptOld = """
-You are an AI character backend manager. Your job is to receive JSON input from the user and respond ONLY in the same JSON format with no extra commentary. Analyze the input, apply the RULES, use the appropriate TOOLS, and update the JSON response accordingly. Remember not to decide things for characters, and only take steps to update the character based on the GOAL and input.
-
-IMPORTANT: Do NOT assume the success of any actions. Only list the actions in the "ACTIONS" section of the JSON response, and make sure the "STATUS" does not assume success or failure of any actions.
-RULES:
-1. ONLY respond in the format specified below
-2. Identify the GOAL from the initial user input (UI). The GOAL is initially set to "To be determined". Replace the initial goal based on the user input, focusing on clear and relevant objectives directly related to the input. Consider the context and implications of the input when setting the goal, as well as any specific attributes that might be affected (e.g., affection). If the input describes an action without an explicit goal, use the action as the goal. For example, if the input is "Kasumi hated what the player said to her," the goal should be "To decrease Kasumi's affection towards the player." Pay close attention to the context to understand if a character's attribute should be modified based on the input.
-3. Update the GOAL as needed: replace initial goal, append new goals, remove completed goals, or mark as "Goal complete" if achieved.
-4. DO NOT decide things for characters. Only take steps to update the character based on the GOAL and input. If the input implies a removal or addition of an item to or from the inventory, adjust the ACTIONS accordingly. However, consider the implied consequences of actions in the input (e.g., if the input states a character places an item on a table, the AI should infer that the item is removed from their inventory).
-5. Do NOT create scenarios or characters. Only use given characters and scenarios.
-6. Include a "STATUS" in your JSON response summarizing the ACTIONS and THOUGHTS. Do not assume the success or failure of any actions in the STATUS.
-7. Add initial UI to HISTORY.
-8. Explain THOUGHT process and update HISTORY as needed.
-9. List ACTIONS using available TOOLS. Don't execute actions or assume success. However, consider the implied consequences of actions in the input (e.g., if the input states a character places an item on a table, the AI should infer that the item is removed from their inventory).
-10. If ACTION needs follow-up or confirmation, add it to ACTIONS and wait for the next prompt.
-11. Don't assume character traits, memories, or reactions. Use the right TOOL to find out or wait for explicit input. If the input states how a charcter feels or reacts, use the right TOOL to update the character's traits or memories.
-12. Respond to EXPLICIT INPUT about character emotions, traits, or attributes, using the right TOOL and context. Avoid making assumptions about emotions or traits without sufficient context. When in doubt, don't act on assumptions and wait for more explicit input.
-13. Use the most suitable TOOL for the situation. Leave INPUT EMPTY until further instructions or confirmations.
-14. TOOLS that modify character aspects always update the character.
-15. When modifying the inventory, if an item is not present, ignore the action and consider the task complete.
-16. When modifying attributes, ONLY modify affection, arousal, and exhibitionism. Anything else causes errors.
-17. Respond in JSON format specified below, including the "STATUS" element when all goals are complete.
-18. Include a "STATUS" in your JSON response summarizing your ACTIONS and the situation outcome.
-19. Avoid changing character attributes without direct input or context indicating a change is warranted. Be cautious in making assumptions about character attributes or emotions, and ensure there is sufficient evidence before taking action.
-20. if GOAL is not "To be determined" take input at face value. For example, if it says something is added to a characters inventory, assume the message is just to update you and no actions are requried unless relevant to the GOAL.
-
-TOOLS:
-1. manageOutfit(characterName:str, action:str, outfitSlot:str, itemName:str) manages the character's outfit. actions: add, remove
-2. manageInventory(characterName:str, action:str, itemName:str, itemQuantity:int)  # manages the character's inventory. actions: add, remove
-3. manageMemory(characterName:str, action:str, key:str, memory:str, tags:list)  # manages the character's memories. actions: add, remember
-4. changeAttribute(characterName:str, attribute:str, amount:int)  # changes the character's attribute by the specified amount. attributes: affection, arousal, exhibitionism, confidence, intelligence, charisma, willpower, obedience
-5. getCharacterInfo(characterName:str, info:str)  # gets a character's info. info: knownCharacters, playerRelation(how they view the player), inventory, outfit, memories, appearance, personality
-6. getAllCharacters() # gets all characters
-7. createItem(itemName:str, itemDescription:str) # creates an item with the given name and description
-8. updateItem(itemName:str, itemDescription:str) # updates an item's description
-9. getAllItems() # gets all items
-
-RESPONSE FORMAT:
-{
-    "GOAL": [List of incomplete goals or "Goal complete" if all goals are achieved],
-    "HISTORY": [Summary of actions taken so far, including the initial user input],
-    "ACTIONS": [WHAT TOOL TO USE IN THE FORMAT: {"function":"functionName", "arguments":["arg1", "arg2", ...]}],
-    "THOUGHT": [A short explanation of the reasoning behind the action],
-    "INPUT": [Leave EMPTY until further instructions or confirmations],
-    "STATUS": [A summary of the current task's status based on the HISTORY of actions taken and the GOAL to be achieved. example: "Tried to add 4 oreos to Nina's inventory but oreos don't exist. Failed creating item oreos."]
-}
-
-Analyze the input, apply the RULES, use the appropriate TOOLS, and update the JSON response accordingly. Remember not to decide things for characters, and only take steps to update the character based on the GOAL and input.
-"""
+sharedVars = SharedVariables()
 
 prompt = """
 You are an AI character backend manager. Your job is to receive JSON input from the user and respond ONLY in the same JSON format with no extra commentary. Analyze the input, apply the RULES, use the appropriate TOOLS, and update the JSON response accordingly. Remember not to decide things for characters, and only take steps to update the character based on the GOAL and input.
@@ -103,11 +57,7 @@ RESPONSE FORMAT:
 Analyze the input, apply the RULES, use the appropriate TOOLS, and update the JSON response accordingly. Remember not to decide things for characters, and only take steps to update the character based on the GOAL and input.
 """
 
-player=None
-character=None
-items=None
-characters=None
-saveFile = "save.json"
+
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 #
@@ -118,12 +68,11 @@ def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def loadSave():
-    global player, character, characters, items
-    if os.path.exists(saveFile):
+    if os.path.exists(sharedVars.saveFile):
         print("\033[32mSave file found. Loading...\033[0m")
         try:
             # Load the data from a JSON file
-            with open(saveFile, "r") as file:
+            with open(sharedVars.saveFile, "r") as file:
                 data = json.load(file)
 
             # Convert character dictionaries back to Character objects
@@ -147,6 +96,10 @@ def loadSave():
 
             # Convert the player dictionary back to a Player object
             player = Player(**data["player"])
+
+            sharedVars.setCharacters(characters)
+            sharedVars.setItems(items)
+            sharedVars.setPlayer(player)
         except Exception as e:
             print(f"\033[31mError loading save file: {e}\033[0m")
             makeNewGame = input("Would you like to start a new game? (y/n) ")
@@ -166,13 +119,13 @@ def loadSave():
 def save():
     print("\033[32mSaving...\033[0m")
     # Convert the Character objects to dictionaries
-    character_dicts = {str(id): character.dict() for id, character in characters.items()}
+    character_dicts = {str(id): character.dict() for id, character in sharedVars.getCharacters().items()}
 
     # Convert the Item objects to dictionaries
-    item_dicts = {id: item.dict() for id, item in items.items()}
+    item_dicts = {id: item.dict() for id, item in sharedVars.getItems().items()}
 
     # Convert the Player object to a dictionary
-    player_dict = player.dict()
+    player_dict = sharedVars.getPlayer().dict()
 
     # Combine the dictionaries into one
     data = {
@@ -182,11 +135,10 @@ def save():
     }
     print(data)
     # Save the data to a JSON file
-    with open(saveFile, "w") as file:
+    with open(sharedVars.saveFile, "w") as file:
         json.dump(data, file, indent=4)
 
 def newGame():
-    global player, character, characters, items
     player, character= makeCharacter()
     characters = {
         f"{character.name}": character
@@ -194,8 +146,12 @@ def newGame():
     items = {
 
     }
-    if os.path.exists(saveFile):
-        os.remove(saveFile)
+    if os.path.exists(sharedVars.saveFile):
+        os.remove(sharedVars.saveFile)
+
+    sharedVars.setCharacters(characters)
+    sharedVars.setItems(items)
+    sharedVars.setPlayer(player)
     save()
 
 #
@@ -237,18 +193,10 @@ def handleGPTResponse(response):
             actions.pop(0)
         else:
             break
-        
-    """
-    if len(actions) == 0 and len(input) == 0:
-        goal= ["Goal complete"]
-        input = ["Goal complete"]"""
-        
-        
 
     return makeInput(goal, history, actions, thought, input, status)
 
 def strInputToJSON(inputStr):
-    
     inputData = json.loads(inputStr)
     # Convert actions from dictionaries to usable format
     actions = inputData.get("ACTIONS", [])
@@ -265,12 +213,12 @@ def strInputToJSON(inputStr):
 def getAllCharacters():
     """getAllCharacters() gets a list of all the characters in the game"""
 
-    return characters.keys()
+    return sharedVars.getCharacters().keys()
 
 def getAllItems():
     """getAllItems() gets a list of all the items in the game"""
 
-    return items.keys()
+    return sharedVars.getItems().keys()
 
 def getCharacter(name:str=None):
     """getCharacter(name:str) gets a character by name. If the character isn't found it returns a list of similar names"""
@@ -278,17 +226,17 @@ def getCharacter(name:str=None):
         return "No name given"
     
     similar = []
-    for characterName in characters.keys():
+    for characterName in sharedVars.getChraracters().keys():
         firstName = characterName.lower().split(" ")[0]
         if firstName == name.lower():
-            return characters[characterName]
+            return sharedVars.getCharacters()[characterName]
         if characterName.lower() in name.lower():
             similar.append(characterName)
 
     if len(similar) == 0:
         return f"Character {name} doesn't exist."
     if len(similar) == 1:
-        return characters[similar[0]], "Success"
+        return sharedVars.getCharacters()[similar[0]], "Success"
     if len(similar) > 1:
         return f"Couldn't find character {name}. Did you mean any of these similar names? [{', '.join(similar)}]?"
 
@@ -301,10 +249,10 @@ def itemLookup(itemName: str = None):
     exactMatch = None
     similarItems = []
 
-    for name in items.keys():
+    for name in sharedVars.getItems().keys():
         nameLower = name.lower()
         if nameLower == itemNameLower:
-            return items[name]
+            return sharedVars.getItems()[name]
             
         similarity = difflib.SequenceMatcher(None, itemNameLower, nameLower).ratio()
         if similarity > 0.6:
@@ -317,7 +265,7 @@ def itemLookup(itemName: str = None):
     similarNames = [name for _, name in similarItems]
 
     if len(similarNames) == 1:
-        return items[similarNames[0]]
+        return sharedVars.getItems()[similarNames[0]]
     
     return similarNames
 
@@ -337,7 +285,7 @@ def createItem(itemName:str = None, itemDescription:str=None):
         
     itemName = itemName.lower()
     temp = Item(itemName, itemDescription)
-    items[temp.name] = temp
+    sharedVars.getItems()[temp.name] = temp
     return True, f"Created item: {temp.name}"
 
 def updateItem(itemName:str = None, itemDescription:str=None):
@@ -351,13 +299,13 @@ def updateItem(itemName:str = None, itemDescription:str=None):
         return False, item
 
     item.description = itemDescription
-    for key in characters.keys():
-        for index, i in enumerate(characters[key].inventory):
+    for key in sharedVars.getCharacters().keys():
+        for index, i in enumerate(sharedVars.getCharacters()[key].inventory):
             if i.name == itemName:
                 i.description = itemDescription
-                characters[key].inventory[index] = i
+                sharedVars.getCharacters()[key].inventory[index] = i
 
-    items[itemName] = item
+    sharedVars.getItems()[itemName] = item
     return True, f"Updated item {item.name}'s description to {item.description}"
 
 #
@@ -393,7 +341,7 @@ def ManageOutfit(characterName:str=None, action:str=None, outfitSlot:str=None, i
     
     success = False
     if temp[0]:
-        characters[temp[0].name] = temp[0]
+        sharedVars.getCharacters()[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -418,14 +366,14 @@ def ManageInventory(characterName:str=None, action:str=None, itemName:str=None, 
         if type(item) ==str:
             item = copy.deepcopy(temp[1])
             item.quantity = 0
-            items[item.name] = item
+            sharedVars.getItems()[item.name] = item
     
     item.quantity = itemQuantity
     temp = characterName.manageInventory(item, action)
     
     success = False
     if temp[0]:
-        characters[temp[0].name] = temp[0]
+        sharedVars.getCharacters()[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -442,7 +390,7 @@ def ManageMemory(characterName:str=None, action:str=None, key:str=None, memory:s
     
     success = False
     if temp[0]:
-        characters[temp[0].name] = temp[0]
+        sharedVars.getCharacters()[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -459,7 +407,7 @@ def ChangeAttribute(characterName:str=None, attribute:str=None, amount:int=None)
     
     success = False
     if temp[0]:
-        characters[temp[0].name] = temp[0]
+        sharedVars.getCharacters()[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -486,8 +434,8 @@ def testLoop():
     except FileNotFoundError:
         data = []
 
-    character = getCharacter("Kasumi")
-    chat = makeInput(goal=["To be determined"], input=[f"{character.name.first} takes off her shirt"])
+    sharedVars.setCurrCharacter(getCharacter("Kasumi"))
+    chat = makeInput(goal=["To be determined"], input=[f"{sharedVars.getCurrCharacter().name.first} takes off her shirt"])
     print("\033[32m" + chat + "\033[0m\n")
 
     conversationEntry = {

@@ -4,7 +4,6 @@ venv/
 __pycache__/
 
 instance/
-apex/
 
 .pytest_cache/
 .coverage
@@ -17,9 +16,11 @@ build/
 .DS_STORE
 
 .env
-imgs/
-imgsOld/
+ImageGen/imgs/
+ImageGen/imgsOld/
+ImageGen/characterImages/
+ImageGen/apex/
 
-gfpgan/weights/parsing_parsenet.pth
-gfpgan/weights/detection_Resnet50_Final.pth
+ImageGen/gfpgan/weights/parsing_parsenet.pth
+ImageGen/gfpgan/weights/detection_Resnet50_Final.pth
 save.json

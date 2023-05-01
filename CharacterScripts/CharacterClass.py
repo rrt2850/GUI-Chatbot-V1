@@ -1,9 +1,18 @@
 import difflib
+import sys
+import os
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from ItemClass import Item
+from WorldScripts.ItemClass import Item
 import re
+
+# Get the parent directory of the current script's directory
+parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add the parent directory to sys.path
+sys.path.append(parent_directory)
+
 outfitSlots = ["top", "bottom", "socks", "shoes", "headwear", "face", "bra", "underwear", "neckware", "ring", "wristware", "waistware", "ankleware"]
 
 class Name:
@@ -184,6 +193,15 @@ class Character:
             {outfit_str}
         """
     
+    def getPronounPersonalSingular(self):
+        if self.gender == "female":
+            return "her"
+        if self.gender == "male":
+            return "him"
+        return "them"
+        
+
+
     def template():
         """template() returns a list of character class attributes and their explanations"""
         

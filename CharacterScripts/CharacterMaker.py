@@ -1,8 +1,9 @@
-
 import re
+import sys
+import os
 from typing import List
-from GptHandler import gptCall
-from CharacterClass import Character
+from WorldScripts.GptHandler import gptCall
+from CharacterScripts.CharacterClass import Character
 
 
 promptTags="standing, facing camera, full body, vertical, solo, detailed"
@@ -142,7 +143,7 @@ def makeCharacter(
     return player, character
 
 def genStartImg(character: Character):
-    from ImgGen import genStanding
+    from ..ImageGen.ImgGen import genStanding
     prompts = genStartImgPrompt(character)
     print(f"Image prompts generated: \n\033[1;36m{prompts}\033[0m")
 
@@ -165,9 +166,3 @@ def genStartImg(character: Character):
     genStanding(filename, posVals, negVals)
     #command = f'{activate_path} activate {conda_env_name} && cd {imgGenDir} && python drawInterface.py "{names_str}" "{values_str}" "{negVals_str}"'
     #subprocess.check_call(command, shell=True)"""
-
-if __name__ == "__main__":
-    player = Player("Shmarples", 18, "male", "heterosexual")
-    player, character = makeCharacter(player, "datable", "description=\"A seductive personal assistant with a flirty personality, she's in love with robert but is too embarrased to say it\"")
-    print(str(character))
-    print(repr(character))
