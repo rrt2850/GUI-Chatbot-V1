@@ -293,9 +293,9 @@ class ChatBotApp(App):
 class ChatBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        #self.messages = [{"role": "system", "content": prompt}]
-        #self.messages.append({"role": "system", "content": f"*{sharedVars.getPlayer().name} walks in and sees you sitting at your desk, it's 8pm and the mood is relaxed and intimate*"})
-        #Clock.schedule_once(self.send_initial_message, 0.5)
+        self.messages = [{"role": "system", "content": prompt}]
+        self.messages.append({"role": "system", "content": f"*{sharedVars.getPlayer().name} walks in and sees you sitting at your desk, it's 8pm and the mood is relaxed and intimate*"})
+        Clock.schedule_once(self.send_initial_message, 0.5)
         #Clock.schedule_once(lambda dt: self.load_chat_history("chat_history.txt"), 0.1)
 
     def send_initial_message(self, dt):
