@@ -435,7 +435,7 @@ def testLoop():
         data = []
 
     sharedVars.setCurrCharacter(getCharacter("Kasumi"))
-    chat = makeInput(goal=["To be determined"], input=[f"{sharedVars.getCurrCharacter().name.first} takes off her shirt"])
+    chat = makeInput(goal=["To be determined"], input=[f"{sharedVars.getCurrCharacter().name.first} puts four apples in her inventory"])
     print("\033[32m" + chat + "\033[0m\n")
 
     conversationEntry = {

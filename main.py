@@ -1,7 +1,5 @@
-from CharacterScripts.CharacterClass import Character, Name
-from CharacterScripts.CharacterMaker import Player
-from CharacterScripts.CharacterHandler import loadSave, save, sharedVars
-from CharacterScripts.ChatSimDraft import start
-from WorldScripts.ItemClass import Item
+from KivyWidgets.ChatSimDraft import start
+#from KivyWidgets.DisplayBuilding import start
+#from KivyWidgets.AdminEditForm import start
 
 start()

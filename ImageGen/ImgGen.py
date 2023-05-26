@@ -3,7 +3,6 @@ import time
 import zipfile
 import findfile
 
-from CharacterClass import Character
 
 for z_file in findfile.find_cwd_files(and_key=['.zip'],
                                       exclude_key=['.ignore', 'git', 'SuperResolutionAnimeDiffusion'],
@@ -399,48 +398,19 @@ def replace_nsfw_images(results):
                 results.images[i] = Image.open("nsfw.png")
     return results.images[0]
 
-def genStanding(filepath: str = None, posValues:str = None, negValues:str = None, character:Character = None):
-    model_name = "anything v4.5"
-    prompt = "standing, facing camera, full body, vertical, solo, detailed"
-    if character is not None:
-        if character.gender=="female":
-            prompt += ", 1girl"
-        elif character.gender=="male":
-            prompt += ", 1boy"
-        if filepath is None:
-            filepath = f"characterImages/{character.name}"
-            os.makedirs(filepath, exist_ok=True)
-            filepath += f"/{character.name}"
-    prompt += ", " + posValues
-    guidance = 17
-    steps = 70
-    width = 720
-    height = 1120
-    seed=0
-    img=None
-    strength=.8,
-    neg_prompt=negValues + """, background, colorful background, bad result, worst, random, invalid, inaccurate, imperfect, blurry, deformed, disfigured, mutation, mutated, ugly, out of focus, bad anatomy, text, error,
-                extra digit, fewer digits, worst quality, low quality, normal quality, noise, jpeg artifact, compression artifact, signature, watermark, username, logo, 
-                low resolution, worst resolution, bad resolution, normal resolution, bad detail, bad details, bad lighting, bad shadow, bad shading, bad background,
-                worst background."""
-    scale="ESRGAN4x"
-    scale_factor=2
-
-    inference(model_name=model_name, prompt=prompt, neg_prompt=neg_prompt, img=img, strength=strength, guidance=guidance, steps=steps, width=width, height=height, seed=seed, scale=scale, scale_factor=scale_factor, filename=filepath)
-
     
 
 if __name__ == "__main__":
     model_name = "anything v4.5"
-    prompt = "detailed, white background, boku no hero academia style, lawyer, standing, 1girl, full body, vertical, old woman, gothic, sundress, twintails"
+    prompt = "1boy, muscular_male, hands_on_own_hips, short_hair, red_hair"
     guidance = 17
-    steps = 30
-    width = 768
+    steps = 70
+    width = 1024
     height = 1024
     seed=0
-    img="prompt.jpg"
+    img=None
     strength=1.0
-    neg_prompt="""background, bad result, worst, random, invalid, inaccurate, imperfect, blurry, deformed, disfigured, mutation, mutated, ugly, out of focus, bad anatomy, text, error,
+    neg_prompt="""bad result, worst, random, invalid, inaccurate, imperfect, blurry, deformed, disfigured, mutation, mutated, ugly, out of focus, bad anatomy, text, error,
                 extra digit, fewer digits, worst quality, low quality, normal quality, noise, jpeg artifact, compression artifact, signature, watermark, username, logo, 
                 low resolution, worst resolution, bad resolution, normal resolution, bad detail, bad details, bad lighting, bad shadow, bad shading, bad background,
                 worst background."""

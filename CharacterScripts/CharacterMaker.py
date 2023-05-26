@@ -2,38 +2,21 @@ import re
 import sys
 import os
 from typing import List
-from WorldScripts.GptHandler import gptCall
-from CharacterScripts.CharacterClass import Character
 
+import openai
+from WorldScripts.GptHandler import gptCall
+from CharacterScripts.CharacterClass import Character, Player
+
+from dotenv import load_dotenv
+load_dotenv()
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY", "")
 
 promptTags="standing, facing camera, full body, vertical, solo, detailed"
 traitListDatable = "tsundere, bakadere, bocchandere, bodere, dandere, deredere, hajidere, himedere, hiyakasudere, kamidere, yandere, nemuidere"
 traitListDatableParent="Nurturing, Overprotective, Authoritative, Perfectionist, Helicopter, Laissez-faire, Supportive, Strict, UnconditionaLove, Sacrificing, Abusive, Neglectful, Unloving, Unsupportive"
 relationList = "friend, family, datable, momOfDatable, dadOfDatable, siblingOfDatable"
 
-class Player:
-    def __init__(self, name: str, age: int, gender: str = None, sexuality: str = None, walletBal: int = 0, inventory: List[str] = [], relationships: List[str] = []):
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.sexuality = sexuality
-        self.walletBal = walletBal
-        self.relationships = relationships
-        self.inventory = inventory
 
-    def __repr__(self):
-        return f"Player:[name: {self.name}, age: {self.age}, gender: {self.gender}, sexuality: {self.sexuality}, walletBal: {self.walletBal}, relationships: [{str(self.relationships)}], inventory: [{str(self.inventory)}]]"
-
-    def dict(self):
-        return {
-            "name": self.name,
-            "age": self.age,
-            "gender": self.gender,
-            "sexuality": self.sexuality,
-            "walletBal": self.walletBal,
-            "relationships": self.relationships,
-            "inventory": self.inventory
-        }
 
 def genStartImgPrompt(character: Character):
     prompt = f"""
@@ -90,25 +73,27 @@ def genStartImgPrompt(character: Character):
 def makeCharacter(
     player: Player=None, tropes: str = traitListDatable, presetTraits: str = ""
 ):
-    player = Player("Shmarples", 18, "male", "heterosexual")
+    player = Player("Robert", 21, "male", "heterosexual")
     prompt = f"""
-    "You are an AI with the purpose of generating a new character for a dating sim."
+    "You are an AI with the purpose of generating a new character for a dating sim. You must follow the REQUIREMENTS below while fitting the RESPONSE FORMAT."
     REQUIREMENTS:
-    1. Characters must have one or more tropes from this list [{tropes}]
-        a. make sure the tropes selected don't conflict with each other and relate to the character description
-    2. Characters MUST be compatible with {player.gender} players, aged {player.age}, and {player.sexuality}
-    2. If the character is female, she must have a breast size from this list [small, medium, large]
-    3. If a variable is already specified in this list [{presetTraits}], you don't need to generate it (if the list is empty generate everything)
-    4. You MUST create an outfit for the character specifying each of the relevant variables (as shown in response format)
-        a. specify things that relate to the outfit even if they aren't visible from the outside, underwear for example
-        b. when specifying something with a specific color, you MUST include what it is. For example, "red hair, blue eyes" instead of "red, blue"
-    5. Height must be specified in inches
-    6. IMPORTANT: all characters must be over 18 and not in high school
+    make sure to create a personality for the character, go into a moderate amount of detail with it. For example: "lucy is a shy girl with a good heart, she is very kind and caring but has trouble expressing herself"
+    make sure to create a backstory for the character that relates to the characters personality and tropes, possibly explaining them. feel free to get creative with this, creating a backstory that is interesting and unique that the character can talk about.
+    Characters must have one or more tropes that relate to their personality and backstory. make sure the tropes selected make sense and don't conflict with each other.
+    Characters MUST be compatible with {player.gender} players, aged {player.age}, and {player.sexuality}
+    If the character is female, she must have a breast size from this list [small, medium, large]
+    If a variable is already specified in this list [{presetTraits}], you don't need to generate it (if the list is empty generate everything)
+    You MUST create an outfit for the character specifying each of the relevant variables (as shown in response format)
+    include everything that you include in the outfit summary, when specifying something with a specific color, you MUST include what it is. For example, "red hair, blue eyes" instead of "red, blue". 
+    include only visible outfit parts in the summary but include ALL outfit parts in the outfit variables make sure panties and bras are separate variables
+    Height must be specified in inches
+    IMPORTANT: all characters must be over 18 and not in high school
 
+    use this description of the player when generating the character: {player.lore}
     RESPONSE FORMAT:
     name="character name":
             characterType="datable"
-            description="description"
+            personality="personality"
             backstory="backstory"
             age="age"
             gender="gender"
@@ -123,20 +108,35 @@ def makeCharacter(
             outfitSummary="outfit summary"
                     top="outfit top"
                     bottom="outfit bottom"
-                    socks="outfit socks if applicable"
-                    shoes="outfit shoes if applicable"
-                    head="outfit headware if applicable"
-                    face="outfit faceware if applicable"
-                    bra="outfit bra if applicable"
+                    socks="outfit socks"
+                    shoes="outfit shoes"
+                    head="outfit headware"
+                    face="outfit faceware"
+                    bra="outfit bra"
                     underwear="outfit underwear"
-                    neckwear="outfit neckwear if applicable"
-                    ring="outfit ring if applicable"
-                    wristware="outfit wristware if applicable"
-                    waistware="outfit waistware if applicable"
-                    ankleware="outfit ankleware if applicable"
+                    neckwear="outfit neckwear"
+                    ring="outfit ring"
+                    wristware="outfit wristware"
+                    waistware="outfit waistware"
+                    ankleware="outfit ankleware"
         """
     
-    response = gptCall(prompt, temperature=0.82)
+    messages = [
+        {"role": "system", "content": prompt}
+    ]
+    
+    response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=0.8,
+            max_tokens=2000,
+            top_p=1,
+            frequency_penalty=1.8,
+            presence_penalty=1.8,
+        )
+
+    response = response.choices[0].message.content
+    print(f"Response: \n\033[1;36m{response}\033[0m")
     character = Character()
     character.parseText(response)
     

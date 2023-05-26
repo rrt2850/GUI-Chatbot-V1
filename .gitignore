@@ -20,7 +20,10 @@ ImageGen/imgs/
 ImageGen/imgsOld/
 ImageGen/characterImages/
 ImageGen/apex/
-
 ImageGen/gfpgan/weights/parsing_parsenet.pth
 ImageGen/gfpgan/weights/detection_Resnet50_Final.pth
+
+CharacterJsons/*.json
+
 save.json
+dreamybull.jpg

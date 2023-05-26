@@ -26,6 +26,9 @@ def gptCall(
     temperature: float = temperature,
     messages: str = None,
     max_tokens: int = 2000,
+    frequency_penalty: float = 0.0,
+    presence_penalty: float = 0.0,
+    top_p: float = 1.0,
 ):
     while True:
         try:
@@ -36,9 +39,10 @@ def gptCall(
                     prompt=prompt,
                     temperature=1,
                     max_tokens=max_tokens,
-                    top_p=.5,
-                    frequency_penalty=0,
-                    presence_penalty=0,
+                    top_p=top_p,
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
+                    n=1
                 )
                 return response.choices[0].text.strip()
             else:
@@ -49,6 +53,9 @@ def gptCall(
                     messages=messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
+                    top_p=top_p,
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
                     n=1,
                     stop=None,
                 )
