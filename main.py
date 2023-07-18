@@ -6,7 +6,7 @@ Description: Main entry point for the chat simulator. This script provides a sta
 """
 
 import json
-from CharacterScripts.CharacterHandler import loadSaveDev, sharedVars
+from CharacterScripts.CharacterHandler import loadSave, sharedVars
 
 from KivyWidgets.ChatSim import ChatBotApp
 #from KivyWidgets.DisplayBuilding import start
@@ -20,7 +20,7 @@ def startDev():
     """
     
     # Load save data
-    loadSaveDev()
+    loadSave()
     
     # Create a list of characters from shared variables
     characters = list(sharedVars.characters.values())
@@ -71,8 +71,9 @@ def startDev():
     sharedVars.currCharacter = currCharacter
     sharedVars.currCharacter2 = currCharacter2
 
+
     # if there is no system message, set it to the default. feel free to change the default to whatever you want
-    if not sharedVars.systemMessage:
+    if sharedVars.systemMessage is None:
         systemMessage = f"*{sharedVars.player.name} is smoking on the couch with {sharedVars.currCharacter.name.first}. The mood is relaxed*"
 
     # Set the system message and prompt in shared variables
@@ -102,6 +103,7 @@ def startDev():
     
     for character in [currCharacter, currCharacter2]:
         if character:
+            # If Character info was written with Robert as the player name, replace it with the actual player name
             if 'Robert' in character.personality:
                 character.personality = character.personality.replace('Robert', sharedVars.player.name)
             if 'Robert' in character.backstory:
@@ -110,15 +112,10 @@ def startDev():
     # Run the application
     ChatBotApp().run()
 
-
-def startPlayer():
-    from KivyWidgets.GUISetup import Startup
-    Startup().run()
-
 if __name__ == '__main__':
-    sharedVars.devmode = False # There's probably a better way to do this, but it's not super important for now
-
-    if sharedVars.devmode:
+    sharedVars.devMode = False # There's probably a better way to do this, but it's not super important for now
+    
+    if sharedVars.devMode:
         startDev()
     else:
         # Set the kivy console to so that it doesn't display debug messages
@@ -127,5 +124,7 @@ if __name__ == '__main__':
 
         # Load the environment variable that was just set
         import dotenv
+        from KivyWidgets.GUISetup import Startup
+
         dotenv.load_dotenv()
-        startPlayer()
+        Startup().run()

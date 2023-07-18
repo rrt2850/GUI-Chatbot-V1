@@ -103,14 +103,7 @@ class ChatBotApp(App):
         Returns:
             RootWidget: The root widget of the application.
         """
-
-        # initialize title and icon
-        if sharedVars.devMode:
-            self.title = 'b-b-b-buss'
-            self.icon = 'dreamybull.jpg'
-        else:
-            self.title = 'super neat robo-girlfriend, name tbd'
-
+        
         def on_request_close(*args):
             save()
 

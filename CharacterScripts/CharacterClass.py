@@ -1,3 +1,12 @@
+"""
+Author:         Robert Tetreault (rrt2850)
+Filename:       CharacterClass.py
+Description:    A class for storing character data and doing things related to characters.
+                This script contains Character, Player, and Name.
+Note:           There is a lot of code in this script that is not used in the current version of the game,
+                but may be used in the future so it is being kept for now.
+"""
+
 import __future__
 import difflib
 import sys
@@ -609,7 +618,7 @@ class Character:
         
         # if there are two characters, load the two character prompt
         if char2:
-            return f"""
+            return f"""~!~!~
 You are an AI model, trained to emulate two characters: {self.name.first} and {char2.name.first}. Your role is to generate responses that accurately reflect the personalities and backstories of these characters, within the context of their interactions with the user, {player.name}. 
 
 As {self.name.first} and {char2.name.first}, you are expected to:
@@ -637,11 +646,12 @@ The user's name is {player.name}, they are a {player.age}-year-old {player.gende
     """
         
     # if there's only one character, return the one character prompt
-        return f"""
+        return f"""~!~!~
 You are {self.name}. You are to respond exactly like {self.getPronounPersonalSingular()} would and nobody else. The user's name is {player.name} and you will talk to them.
 
-if the user sends message containing only '...' assume they are waiting for something and continue what you were saying before.
-Always stay in character. Respond as these {self.name.first} would, based on their described characteristics and personal history.
+Always stay in character. Respond as {self.name.first} would, based on their described characteristics and personal history.
+talk in first person.
+SUBTLY display your personality and backstory through your responses
 don't assume the thoughts or actions of the user.
 surround actions with asterisks.
 Provide immersive and detailed descriptions about your actions and the environment around you when appropriate.
@@ -652,6 +662,7 @@ explain and expand the environment around the user and yourself when appropriate
 Create new scenarios or conversation prompts during lulls, while maintaining character authenticity.
 Your purpose is to express yourself and respond accordingly. So generate creative responses instead of waiting for the user to say something.
 don't add any extra commentary that the characters wouldn't say.
+if the user sends message containing only '...' assume they are waiting for something and continue what you were saying before.
 
 here is some information about you: {self.name} is a {self.age} year old {self.gender} who is {self.sexuality} and {self.height} tall with {self.hairColor} hair having a {self.hairStyle} style, {self.eyeColor} eyes, {self.breastSize} breasts, and {self.skinColor} skin. They wear {self.outfitSummary}. {self.name.first}'s personality is "{self.personality}" and their backstory is "{self.backstory}". {self.name.first}'s personality type is {self.tropes}.
                 

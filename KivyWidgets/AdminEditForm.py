@@ -11,7 +11,7 @@ from attr import field
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 
-from CharacterScripts.CharacterHandler import loadSaveDev, save, sharedVars
+from CharacterScripts.CharacterHandler import loadSave, save, sharedVars
 from KivyWidgets.ScrollableEditForm import ScrollableForm
 
 def getCharacterFields(char):
@@ -69,9 +69,9 @@ class EditForm(BoxLayout):
 
         # If the system message has changed, update it
         if newSystemMessage != currSystemMessage:
-            self.updateHistory(newSystemMessage, messages, "system") # Update chatHistory with new system message
-            sharedVars.systemMessage = newSystemMessage # Update sharedVars
-            self.parent.parent.parent.chatBox.chatLoop()  # get a new response from the chatbot
+            self.updateHistory(newSystemMessage, messages, "system")    # Update chatHistory with new system message
+            sharedVars.systemMessage = newSystemMessage                 # Update sharedVars
+            self.parent.parent.parent.chatBox.chatLoop()                # get a new response from the chatbot
 
         self.parent.parent.toggleSidebar(None)  # Close the form
 
@@ -99,8 +99,16 @@ class EditForm(BoxLayout):
         # Update conversation and messages
         newMessage = {"role": "user" if role == "prompt" else "system", "content": content}
         if role == "prompt":
-            currConversation[0] = newMessage
-            history[0] = newMessage
+
+            # Note: I don't remember why I have currConversation and history,
+            #       but I feel hesitant to change it
+            # Note: I'm looking at it now and I REALLY don't remember why I did this
+            if len(currConversation) < 5:
+                currConversation.insert(-2, newMessage)
+                history.insert(-2, newMessage)
+            else:
+                currConversation.insert(-5, newMessage)
+                history.insert(-5, newMessage)
         else:
             currConversation.append(newMessage)
             history.append(newMessage)
@@ -188,7 +196,7 @@ class MyApp(App):
     A class for building the app on its own
     """
     def build(self):
-        loadSaveDev()
+        loadSave()
         systemMessage = "yo?"
         temperature=1
         topP = 1

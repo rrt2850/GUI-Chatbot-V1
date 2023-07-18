@@ -75,7 +75,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def loadSaveDev():
+def loadSave():
 
     # TODO rewrite this so that it accesses the dictionaries in a safer way
     if os.path.exists(sharedVars.saveFile):
@@ -112,7 +112,6 @@ def loadSaveDev():
 
             # Get the last system message if there is one
             sharedVars.systemMessage = data.get("systemMessage", None)
-
             sharedVars.characters = characters
             sharedVars.items = items
             sharedVars.players = players
@@ -511,5 +510,5 @@ def testLoop():
     save()
 
 if __name__ == "__main__":
-    loadSaveDev()
+    loadSave()
     testLoop()

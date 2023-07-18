@@ -395,14 +395,16 @@ class ChatBoxLayout(BoxLayout):
         # If the total number of tokens is greater than the token limit, remove messages until it's not
         while totalTokens > self.tokenLimit:
             print(f"Total tokens: {totalTokens}, Token limit: {self.tokenLimit}")
-            for _ in range(2):
-                # Remove the oldest message after the prompt and initial system message
-                removedMessage = messages.pop(2)
+            
+            # Remove the oldest message after the prompt and initial system message
+            removedMessage = messages.pop(0)
 
-                # If the removed message is a system message, update the system message variable
-                if removedMessage["role"] == "system":
-                    messages[1] = removedMessage
-
+            # If the prompt was removed, add it closer to the end of the list
+            if "~!~!~" in removedMessage["content"]:
+                if len(messages) < 5:
+                    messages.insert(-2, removedMessage)
+                messages.insert(-5, removedMessage)
+            else:
                 # Update the total number of tokens
                 totalTokens -= countTokens(removedMessage["content"])
         badResponse = True
