@@ -16,6 +16,8 @@ build/
 .DS_STORE
 
 .env
+ImageGen
+ImageGen/*
 ImageGen/imgs/
 ImageGen/imgsOld/
 ImageGen/characterImages/

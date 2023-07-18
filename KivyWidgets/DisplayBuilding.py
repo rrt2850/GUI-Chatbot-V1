@@ -83,7 +83,7 @@ class SpanLayout(RelativeLayout):
 
 class BuildingGrid(BoxLayout):
     grid = ListProperty([])
-    grid_size = NumericProperty(0)
+    gridSize = NumericProperty(0)
 
     def __init__(self, building, **kwargs):
         super(BuildingGrid, self).__init__(**kwargs)

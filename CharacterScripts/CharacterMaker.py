@@ -1,10 +1,6 @@
-import re
-import sys
 import os
-from typing import List
 
 import openai
-from WorldScripts.GptHandler import gptCall
 from CharacterScripts.CharacterClass import Character, Player
 
 from dotenv import load_dotenv
@@ -17,110 +13,95 @@ traitListDatableParent="Nurturing, Overprotective, Authoritative, Perfectionist,
 relationList = "friend, family, datable, momOfDatable, dadOfDatable, siblingOfDatable"
 
 
-
-def genStartImgPrompt(character: Character):
-    prompt = f"""
-        "You are an AI with the purpose of converting a character description into a form usable by stable diffusion. Follow these guidelines:
-        1. Use the provided input template to create the results.
-        2. Summarize visible traits from the description into 1-3 word statements.
-        3. Exclude irrelevant data like name.
-        4. If outfit parts aren't visible, exclude them from the positivePrompt and include them in the negativePrompt
-        5. Use tags from https://danbooru.donmai.us/ when possible.
-        6. Order your prompt by importance, for example, if a character is wearing a jacket put it before their shirt because it's above it
-        7. IMPORTANT: If the character is female, ensure breast size is included in the positivePrompt as "[breastSize] breasts"
-        8. IMPORTANT: when specifying something with a specific color, include them in the same comma separated statement. For example, "red hair, blue eyes"
-        9. IMPORTANT: when separating attributes by chracteristics, make sure to specify what each attribute is. For example, "brown hair, long wavy hair" is better than "brown, long, wavy hair"
-        10. IMPORTANT: Ensure both positivePrompt and negativePrompt are concise and have fewer than 70 tokens in length. Prioritize essential traits in the character's appearance.
-        INPUT FORMAT:
-        name="character name":
-            description="description"
-            backstory="backstory"
-            height="height"
-            gender="gender"
-            breastSize="breast size"
-            hairStyle="hair style"
-            hairColor="hair color"
-            eyeColor="eye color"
-            skinColor="skin color"
-            tropes="character tropes separated by commas"
-            outfitSummary="outfit summary"
-                    top="outfit top"
-                    bottom="outfit bottom"
-                    socks="outfit socks if applicable"
-                    shoes="outfit shoes"
-                    head="outfit headware if applicable"
-                    face="outfit faceware if applicable"
-                    bra="outfit bra if applicable"
-                    underwear="outfit underwear"
-                    neck="outfit neckwear if applicable"
-                    ring="outfit ring if applicable"
-                    wristware="outfit wristware if applicable"
-                    waistware="outfit waistware if applicable"
-                    ankleware="outfit ankleware if applicable"
-        OUTPUT FORMAT (PROMPTS MUST BE <= 70 TOKENS):
-        positivePrompt: "all visual traits to keep separated by ', '"
-        negativePrompt: "all visual traits we don't want to see separated by ', '"
-        INPUT:
-        {character.toImg()}
-    """
-    try:
-        response = gptCall(prompt,temperature=0.82)
-        return response
-    except:
-        print("Error generating image prompt")
-        return None
-
 def makeCharacter(
-    player: Player=None, tropes: str = traitListDatable, presetTraits: str = ""
+    player: Player=Player("Robert", 21, "male", "heterosexual"), tropes: str = traitListDatable, presetTraits: str = ""
 ):
-    player = Player("Robert", 21, "male", "heterosexual")
-    prompt = f"""
-    "You are an AI with the purpose of generating a new character for a dating sim. You must follow the REQUIREMENTS below while fitting the RESPONSE FORMAT."
-    REQUIREMENTS:
-    make sure to create a personality for the character, go into a moderate amount of detail with it. For example: "lucy is a shy girl with a good heart, she is very kind and caring but has trouble expressing herself"
-    make sure to create a backstory for the character that relates to the characters personality and tropes, possibly explaining them. feel free to get creative with this, creating a backstory that is interesting and unique that the character can talk about.
-    Characters must have one or more tropes that relate to their personality and backstory. make sure the tropes selected make sense and don't conflict with each other.
-    Characters MUST be compatible with {player.gender} players, aged {player.age}, and {player.sexuality}
-    If the character is female, she must have a breast size from this list [small, medium, large]
-    If a variable is already specified in this list [{presetTraits}], you don't need to generate it (if the list is empty generate everything)
-    You MUST create an outfit for the character specifying each of the relevant variables (as shown in response format)
-    include everything that you include in the outfit summary, when specifying something with a specific color, you MUST include what it is. For example, "red hair, blue eyes" instead of "red, blue". 
-    include only visible outfit parts in the summary but include ALL outfit parts in the outfit variables make sure panties and bras are separate variables
-    Height must be specified in inches
-    IMPORTANT: all characters must be over 18 and not in high school
+    promptOld = f"""
+"You are an AI with the purpose of generating a new character for a dating sim. You must follow the REQUIREMENTS below while fitting the JSON RESPONSE FORMAT."
+REQUIREMENTS:
+make sure to create a personality for the character, go into a moderate amount of detail with it. For example: "lucy is a shy girl with a good heart, she is very kind and caring but has trouble expressing herself"
+make sure to create a backstory for the character that relates to the characters personality and tropes, possibly explaining them. feel free to get creative with this, creating a backstory that is interesting and unique that the character can talk about.
+Characters must have one or more tropes that relate to their personality and backstory. make sure the tropes selected make sense and don't conflict with each other.
+Characters MUST be compatible with {player.gender} players, aged {player.age}, and {player.sexuality}
+If the character is female, she must have a breast size from this list [small, medium, large]
+You MUST create an outfit for the character specifying each of the relevant variables (as shown in response format)
+include everything that you include in the outfit summary, when specifying something with a specific color, you MUST include what it is. For example, "red hair, blue eyes" instead of "red, blue". 
+include only visible outfit parts in the summary but include ALL outfit parts in the outfit variables make sure panties and bras are separate variables
+Height must be specified in inches
+IMPORTANT: all characters must be over 18 and not in high school
 
-    use this description of the player when generating the character: {player.lore}
-    RESPONSE FORMAT:
-    name="character name":
-            characterType="datable"
-            personality="personality"
-            backstory="backstory"
-            age="age"
-            gender="gender"
-            sexuality="sexuality"
-            height="height"
-            breastSize="breast size"
-            hairStyle="hair style"
-            hairColor="hair color"
-            eyeColor="eye color"
-            skinColor="skin color"
-            tropes="character tropes separated by commas"
-            outfitSummary="outfit summary"
-                    top="outfit top"
-                    bottom="outfit bottom"
-                    socks="outfit socks"
-                    shoes="outfit shoes"
-                    head="outfit headware"
-                    face="outfit faceware"
-                    bra="outfit bra"
-                    underwear="outfit underwear"
-                    neckwear="outfit neckwear"
-                    ring="outfit ring"
-                    wristware="outfit wristware"
-                    waistware="outfit waistware"
-                    ankleware="outfit ankleware"
+use this description of the player when generating the character: {player.lore}
+
+respond exactly as shown in the response format without modifying the spacing, capitalization, or quotation types
+JSON RESPONSE FORMAT:
+{{
+    "name":"character name",
+    "age":"character age",
+    "gender":"character gender",
+    "personality":"character personality",
+    "backstory":"character backstory",
+    "tropes":"character tropes separated by commas",
+    "sexuality":"character sexuality",
+    "characterType":"datable",
+    "height":"character height",
+    "breastSize":"character breast size",
+    "hairStyle":"character hair style",
+    "hairColor":"character hair color",
+    "eyeColor":"character eye color",
+    "skinColor":"character skin color",
+    "outfitSummary":"character outfit summary",
+    "outfit":{{
+        "top":"character outfit top",
+        "bottom":"character outfit bottom",
+        "socks":"character outfit socks",
+        "shoes":"character outfit shoes",
+        "head":"character outfit headwear",
+        "face":"character outfit facewear",
+        "bra":"character outfit bra",
+        "underwear":"character outfit underwear",
+        "neck":"character outfit neckwear",
+        "ring":"character outfit ring",
+        "wristware":"character outfit wristware",
+        "waistware":"character outfit waistware",
+        "ankleware":"character outfit ankleware"
+    }}
+}}
         """
-    
+
+    prompt = f"""
+You are an AI with the purpose of generating a new character for a dating sim. follow the REQUIREMENTS below while filling THE ENTIRE RESPONSE TEMPLATE. Your response must exactly fit the or there will be parsing errors.
+
+REQUIREMENTS:
+ALL variables in the response template must be filled out
+use moderate detail when making the personality For example: "lucy is a shy girl with a good heart, she is very kind and caring but has trouble expressing herself"
+make a backstory that loosely relates to the characters personality. create a backstory that is interesting and unique while still concise.
+create tropes based on the personality, the tropes selected must make sense and not conflict with each other.
+Characters MUST be compatible with {player.gender} players, aged {player.age}, and {player.sexuality} for example, if the player is male and heterosexual generate a female character that is heterosexual or bisexual
+If the character is female, she must have a breast size from this list [small, medium, large]
+when specifying something with a specific color, include what it is. For example, "red hair, blue eyes" instead of "red, blue". 
+Height must be specified in inches
+IMPORTANT: all characters must be over 18 and not in high school
+IMPORTANT: match the formatting of the response template EXACTLY, including the spacing, capitalization, and quotation types
+
+RESPONSE TEMPLATE:
+{{
+    "name":"character name",
+    "age":"character age",
+    "gender":"character gender",
+    "sexuality":"character sexuality",
+    "characterType":"datable",
+    "height":"character height",
+    "breastSize":"character breast size",
+    "hairStyle":"character hair style",
+    "hairColor":"character hair color",
+    "eyeColor":"character eye color",
+    "skinColor":"character skin color",
+    "personality":"character personality",
+    "backstory":"character backstory",
+    "tropes":"character tropes separated by commas",
+}}
+    """
+
     messages = [
         {"role": "system", "content": prompt}
     ]
@@ -137,32 +118,10 @@ def makeCharacter(
 
     response = response.choices[0].message.content
     print(f"Response: \n\033[1;36m{response}\033[0m")
+    
+    
     character = Character()
     character.parseText(response)
     
     return player, character
 
-def genStartImg(character: Character):
-    from ..ImageGen.ImgGen import genStanding
-    prompts = genStartImgPrompt(character)
-    print(f"Image prompts generated: \n\033[1;36m{prompts}\033[0m")
-
-    pattern = r'(\w+)\s*=\s*"([^"]*)"'
-    matches = re.finditer(pattern, prompts)
-
-    filename = ""
-    posVals = []
-    negVals = []
-
-    for match in matches:
-        valueType, value = match.groups()
-        if valueType == "positivePrompt":
-            posVals.append(value)
-        elif valueType == "negativePrompt":
-            negVals.append(value)
-
-    print(f"values: {posVals}")
-    print(f"negVals: {negVals}")
-    genStanding(filename, posVals, negVals)
-    #command = f'{activate_path} activate {conda_env_name} && cd {imgGenDir} && python drawInterface.py "{names_str}" "{values_str}" "{negVals_str}"'
-    #subprocess.check_call(command, shell=True)"""

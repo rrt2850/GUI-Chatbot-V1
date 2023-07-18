@@ -1,4 +1,4 @@
-from collections import deque
+from CharacterScripts.CharacterHandler import sharedVars
 
 opposite = {
     'up': 'down',
@@ -109,4 +109,25 @@ def gymPreset():
     # Generate and print the building grid
     building.makeGrid()
 
+    return building
+
+def starterHousePreset():
+    building = Building("Starter House", f"A {sharedVars.player.name} and {sharedVars.currCharacter.name.first}'s house")
+    entrance = Room("Entrance", "The main entrance to the house", 1, 1)
+    livingRoom = Room("Living Room", "A room with a couch, coffee table, and tv", 1, 2)
+    kitchen = Room("Kitchen and Dining Room", "A kitchen that extends into a dining room", 1, 2)
+    bathroom = Room("Bathroom", "A bathroom with a toilet, sink, and shower", 1, 1)
+    bedroom1 = Room(f"{sharedVars.player.name}'s Bedroom", "A bedroom with a bed, dresser, and closet", 1, 1)
+    bedroom2 = Room(f"{sharedVars.currCharacter.name.first}'s Bedroom", "A bedroom with a bed, dresser, and closet", 1, 1)
+    hallway = Room("Hallway", "A hallway connecting the rooms", 1, 4)
+
+    building.addRoom(entrance)
+    building.addRoom(livingRoom, connections=[(entrance, 'down', 0, 0)])
+    building.addRoom(kitchen, connections=[(livingRoom, 'left', 0, 0)])
+    building.addRoom(hallway, connections=[(kitchen, 'left', 3, 0)])
+    building.addRoom(bathroom, connections=[(hallway, 'right', 0, 2)])
+    building.addRoom(bedroom1, connections=[(hallway, 'left', 0, 0)])
+    building.addRoom(bedroom2, connections=[(hallway, 'right', 0, 1)])
+
+    building.makeGrid()
     return building

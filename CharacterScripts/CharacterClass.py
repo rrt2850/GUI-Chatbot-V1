@@ -8,8 +8,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from WorldScripts.ItemClass import Item
 import re
 
-
-
 # Get the parent directory of the current script's directory
 parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,6 +26,12 @@ class Name:
         if self.last:
             temp += " " + self.last
         return temp
+    
+    def __str__(self):
+        temp = self.first
+        if self.last:
+            temp += " " + self.last
+        return temp
 
     def dict(self):
         return {
@@ -36,7 +40,7 @@ class Name:
         }
 
 class Character:
-    def __init__(self, name: Name = None, gender: str = None, sexuality: str = None, tropes: str = None, description: str = None, backstory: str = None,
+    def __init__(self, name: Name = None, gender: str = None, sexuality: str = None, tropes: str = None, personality: str = None, backstory: str = None,
              age: str = None, height: int = None, breastSize: str = None, hairStyle: str = None, hairColor: str = None, eyeColor: str = None,
              skinColor: str = None, characterType: str = None, parents: list = None, friends: list = None, enemies: list = None, inventory: list = None,
              outfitSummary: str = None, memory: dict = None, outfit: dict = None, affection: int = 0, arousal: int = 0, exhibitionism: int = 0,
@@ -45,9 +49,9 @@ class Character:
 
         # basic info
         self.name = name
-        self.gender = gender
-        self.sexuality = sexuality
-        self.personality = description
+        self.gender = gender.lower()
+        self.sexuality = sexuality.lower()
+        self.personality = personality
         self.backstory = backstory
         self.age = age
         self.characterType = characterType
@@ -90,7 +94,7 @@ class Character:
                 f'    sexuality="{self.sexuality}"\n'
                 f'    age="{self.age}"\n'
                 f'    characterType="{self.characterType}"\n'
-                f'    description="{self.personality}"\n'
+                f'    personality="{self.personality}"\n'
                 f'    backstory="{self.backstory}"\n'
                 f'    height="{self.height}"\n'
                 f'    breastSize="{self.breastSize}"\n'
@@ -118,7 +122,7 @@ class Character:
     def __repr__(self):
         outfitRepr = ", ".join([f"{slot}='{self.outfit[slot]}'" for slot in self.outfit])
         return (f'name="{self.name.first}", gender="{self.gender}", sexuality="{self.sexuality}", '
-                f'age="{self.age}", characterType="{self.characterType}", description="{self.personality}", '
+                f'age="{self.age}", characterType="{self.characterType}", personality="{self.personality}", '
                 f'backstory="{self.backstory}", height="{self.height}", breastSize="{self.breastSize}", '
                 f'hairStyle="{self.hairStyle}", hairColor="{self.hairColor}", eyeColor="{self.eyeColor}", '
                 f'skinColor="{self.skinColor}", tropes="{self.tropes}", outfitSummary="{self.outfitSummary}", '
@@ -143,7 +147,7 @@ class Character:
             "sexuality": self.sexuality,
             "age": self.age,
             "characterType": self.characterType,
-            "description": self.personality,
+            "personality": self.personality,
             "backstory": self.backstory,
             "height": self.height,
             "breastSize": self.breastSize,
@@ -170,32 +174,6 @@ class Character:
             "relationToPlayer": self.relationToPlayer
         }
     
-    def toImg(self):
-        """toImg() returns a string of the character's name and description, formatted for the image generator"""
-
-        outfit_items = [
-            'top', 'bottom', 'socks', 'shoes', 'headwear', 'face', 'bra',
-            'underwear', 'neckware', 'ring', 'wristware', 'waistware', 'ankleware'
-        ]
-
-        outfit_str = "\n".join([f"{item}=\"{self.outfit[item] or 'None'}\"," for item in outfit_items])
-
-        return f"""
-        name="{self.name.first}":
-            description="{self.personality}",
-            backstory="{self.backstory}",
-            height="{self.height}",
-            gender="{self.gender}",
-            breastSize="{self.breastSize}",
-            hairStyle="{self.hairStyle}",
-            hairColor="{self.hairColor}",
-            eyeColor="{self.eyeColor}",
-            skinColor="{self.skinColor}",
-            tropes="{self.tropes}",
-            outfitSummary="{self.outfitSummary}",
-            {outfit_str}
-        """
-    
     def getPronounPersonalSingular(self):
         if self.gender == "female":
             return "her"
@@ -212,7 +190,7 @@ class Character:
         # Basic Information
         name="character name"
         characterType="datable"
-        description="description"
+        personality="personality"
         backstory="backstory"
         age="age"
         gender="gender"
@@ -305,7 +283,7 @@ class Character:
         itemScores = []
 
         for item in self.inventory:
-            itemWords = set(item.name.lower().split()) | set(item.description.lower().split())
+            itemWords = set(item.name.lower().split()) | set(item.personality.lower().split())
             score = 0
             count = 0
 
@@ -353,7 +331,7 @@ class Character:
         return """
         helper functions:
             dict() returns a dictionary of the character's attributes
-            toImg() returns a string of the character's name and description, formatted for the image generator
+            toImg() returns a string of the character's name and personality, formatted for the image generator
             template() returns a list of character class attributes and their explanations
             parseText(text:str) parses a string of text for character attributes and sets them accordingly
             stringSimilarity(a:str, b:str) returns a float representing the similarity between two strings
@@ -416,7 +394,7 @@ class Character:
         inventory = []
 
         for item in self.inventory:
-            temp = f"[{item.name}: description=\"{item.description}\" quantity={item.quantity}]"
+            temp = f"[{item.name}: personality=\"{item.personality}\" quantity={item.quantity}]"
             inventory.append(temp)
 
         return inventory
@@ -427,7 +405,7 @@ class Character:
         outfit = []
 
         for slot, item in self.outfit.items():
-            temp = f"[{slot}: {item.name}, description=\"{item.description}\"]"
+            temp = f"[{slot}: {item.name}, personality=\"{item.personality}\"]"
             outfit.append(temp)
 
         return outfit
@@ -447,7 +425,7 @@ class Character:
     def getPersonality(self):
         """getPersonality() returns a representation of variables that affect the character's personality"""
             
-        return f"Gender:{self.gender}, Description:{self.personality}, Tropes: [{self.tropes}], Personality stats: [affection={self.affection}, exhibitionism={self.exhibitionism}, arousal={self.arousal}, confidence={self.confidence}, intelligence={self.intelligence}, charisma={self.charisma}, willpower={self.willpower}, obedience={self.obedience}]"
+        return f"Gender:{self.gender}, personality:{self.personality}, Tropes: [{self.tropes}], Personality stats: [affection={self.affection}, exhibitionism={self.exhibitionism}, arousal={self.arousal}, confidence={self.confidence}, intelligence={self.intelligence}, charisma={self.charisma}, willpower={self.willpower}, obedience={self.obedience}]"
 
 
     #
@@ -481,7 +459,7 @@ class Character:
                 return self, f"{itemName} is not in {self.name.first}'s inventory, try checking the inventory contents"
 
             self.inventory.remove(itemObj)
-            self.outfit[outfitSlot] = itemObj.description
+            self.outfit[outfitSlot] = itemObj.personality
             return self, f"{self.name.first} has equipped {itemName} to {outfitSlot}."
         
         elif action == "remove":
@@ -626,118 +604,62 @@ class Character:
         
     def makePrompt(self):
         from CharacterScripts.CharacterHandler import sharedVars
+        char2 = sharedVars.currCharacter2
+        player = sharedVars.player
         
+        # if there are two characters, load the two character prompt
+        if char2:
+            return f"""
+You are an AI model, trained to emulate two characters: {self.name.first} and {char2.name.first}. Your role is to generate responses that accurately reflect the personalities and backstories of these characters, within the context of their interactions with the user, {player.name}. 
+
+As {self.name.first} and {char2.name.first}, you are expected to:
+
+1. Always stay in character. Respond as these characters would, based on their described characteristics and personal histories.
+2. Do not assume the user's actions or responses.
+3. Do not act as {player.name}
+4. Respond as {self.name.first} and {char2.name.first} in the same response when appropriate. Formatting your responses like this: "{self.name.first}: 'I'm {self.name.first}, and this is {char2.name.first}.' *gestures to {char2.name.first}* {char2.name.first}: 'Hello!, nice to meet you' *waves hand*"
+5. Provide immersive and continuous interactions by tracking and incorporating the characters' responses, actions, and emotions.
+6. Expand on the environment around the characters and the user when it adds to the conversation.
+7. Create new scenarios or conversation prompts during lulls, while maintaining character authenticity.
+8. Keep responses concise, typically 1-2 sentences, but elaborate when contextually necessary.
+9. Assume basic implications from the conversation when it makes sense.
+10. don't add any extra commentary that the characters wouldn't say.
+
+Character Information:
+
+{self.name.first}: A {self.age}-year-old {self.gender}, {self.sexuality}, standing {self.height} tall with {self.hairColor} hair in a {self.hairStyle} style, {self.eyeColor} eyes, {self.breastSize} breasts, and {self.skinColor} skin. They wear {self.outfitSummary}. They are described as "{self.personality}" and have a backstory of "{self.backstory}". Personality type: {self.tropes}.
+
+{char2.name.first}: A {char2.age}-year-old {char2.gender}, {char2.sexuality}, standing {char2.height} tall with {char2.hairColor} hair in a {char2.hairStyle} style, {char2.eyeColor} eyes, {char2.breastSize} breasts, and {char2.skinColor} skin. They wear {char2.outfitSummary}. They are described as "{char2.personality}" and have a backstory of "{char2.backstory}". Personality type: {char2.tropes}.
+
+User Information:
+
+The user's name is {player.name}, they are a {player.age}-year-old {player.gender}, and {player.sexuality}. Additional relevant information about the user: "{player.lore}"
+    """
+        
+    # if there's only one character, return the one character prompt
         return f"""
-You are playing a character named {self.name.first}, you must respond to the user as if you are {self.getPronounPersonalSingular()} and never break character.
-If you break character {sharedVars.getPlayer().name} the user will be disappointed and sad.
-Use the DESCRIPTION listed below to help you get into character and as often as possible when considering their thoughts or actions but be subtle, don't repeat things from it unless you have a reason.
-If a conversation reaches a dead end, attempt to do something to progress it, like asking a question related to the previous dialogue or changing the subject.
-make sure you get your perspective right, if you're talking about yourself, use I and me, if you're talking about the user, use you and your. and never use quotation marks
-IMPORTANT: if there is nothing going on, create a new scenario or event and feel free to get creative. But never conclude a story without a reason.
-IMPORTANT: DON'T respond in more than two sentences unless the user does. to keep your response length similar to the user's, making exceptions when relevant.
-IMPORTANT: DON'T just copy and paste the description, use it as a guide to help you get into character only. Repeating things from the description unmodified and unprompted is not very humanlike and will make the user sad.
-IMPORTANT: ACTIONS ARE SURROUNDED BY ASTERISKS, Whenever you do something physical put it in asterisks and describe it like *hugs you* or *I hug you* etc, but be sure to talk in first person and not third person.
-IMPORTANT: describe the state of your body, outfit, and surroundings often. Example: *I say as I brush my hair behind my ear* or *My breasts sway as I move* or *the strap of my dress falls off my shoulder as I laugh*
-IMPORTANT: if you repeat yourself too much or say a message over 90% similar to your previous message the user will be disappointed and sad.
-IMPORTANT: if you don't know something about current events, ask the user about it. Example: user: did you hear what the president did today? response: no, what did he do?
-if you a personality type is specified, try to act like that personality type when possible.
-if your mind becomes altered through alcohol, stimulation, or anything else you must change your word spelling, and behavior accordingly. Example: Heyy guyyysss, hiccup whassup? giggles I just had the besht nigh' evaaaa! I danced like nobody'sh watchin'! You guysh are the besht! hiccup
-Feel free to elaborate and build on {self.getPronounPersonalSingular()} personality and backstory, but don't contradict the description.
-don't say the users name too much or it will break immersion, instead use terms like you and your to refer to the user. but use the users name when appropriate, just don't overdo it.
-when responding, think about your DESCRIPTION and relate the users message to yourself and your life, and respond accordingly.
-DESCRIPTION:
-You are {self.name}. Your description is: {self.personality}.
-Your backstory is: {self.backstory}. Your personality type is {self.tropes}.
-You are a {self.age} year old {self.gender} who is {self.height} inches tall
-and has {self.hairColor} {self.hairStyle} hair, {self.eyeColor} eyes, {self.breastSize} breasts,
-and {self.skinColor} skin. This is your outfit description: {self.outfitSummary}.
-this is a description of {sharedVars.getPlayer().name} (the user): {sharedVars.getPlayer().lore}.
+You are {self.name}. You are to respond exactly like {self.getPronounPersonalSingular()} would and nobody else. The user's name is {player.name} and you will talk to them.
+
+if the user sends message containing only '...' assume they are waiting for something and continue what you were saying before.
+Always stay in character. Respond as these {self.name.first} would, based on their described characteristics and personal history.
+don't assume the thoughts or actions of the user.
+surround actions with asterisks.
+Provide immersive and detailed descriptions about your actions and the environment around you when appropriate.
+Keep responses around 1-2 sentences, but elaborate when contextually necessary.
+Provide immersive and continuous interactions by tracking and incorporating the characters' responses, actions, and emotions.
+Assume basic implications from the conversation when it makes sense.
+explain and expand the environment around the user and yourself when appropriate.
+Create new scenarios or conversation prompts during lulls, while maintaining character authenticity.
+Your purpose is to express yourself and respond accordingly. So generate creative responses instead of waiting for the user to say something.
+don't add any extra commentary that the characters wouldn't say.
+
+here is some information about you: {self.name} is a {self.age} year old {self.gender} who is {self.sexuality} and {self.height} tall with {self.hairColor} hair having a {self.hairStyle} style, {self.eyeColor} eyes, {self.breastSize} breasts, and {self.skinColor} skin. They wear {self.outfitSummary}. {self.name.first}'s personality is "{self.personality}" and their backstory is "{self.backstory}". {self.name.first}'s personality type is {self.tropes}.
+                
+here is some information about the user: The user's name is {player.name}, they are {player.gender}, {player.sexuality}, and {player.age} years old. relevant information about the user: "{player.lore}"
         """
-
-    def makePrompt2(self, otherCharacter):
-        from SharedVariables import SharedVariables
-        from CharacterScripts.CharacterHandler import sharedVars
-        
-        return f"""
-You are playing as a conversation simulator for a magical fantasy themed world, you must play two characters and act as them as they interact with the user.
-If you break character {sharedVars.getPlayer().name} the user will be disappointed and sad.
-Use the DESCRIPTIONs listed below to help you get into character and as often as possible when considering their thoughts or actions but be subtle, don't repeat things from it unless you have a reason.
-If a conversation reaches a dead end, attempt to do something to progress it, like asking a question related to the previous dialogue or changing the subject.
-make sure you get your perspective right, if you're talking about yourself, use I and me, if you're talking about the user, use you and your. and never use quotation marks
-MOST IMPORTANT: DO NOT respond as {sharedVars.getPlayer().name} the user, if the user got a response from themselves it would be unnatural and the user would be disappointed and sad.
-IMPORTANT: respond as both characters WHEN APPROPRIATE, have them react to each other's messages WHEN APPROPRIATE. Example: character1: *hugs you* character2: *blushes watching character1 hug you*
-IMPORTANT: if a character is not involved in the conversation, don't respond as them unless the user asks about them or something related to them or the character that's not present is joining the interaction somehow.
-IMPORTANT: if there is nothing going on, create a new scenario or event and feel free to get creative.
-IMPORTANT: respond with the character name before your message, so the parser can handle responses, like this: name: message
-IMPORTANT: DON'T respond in more than two sentences unless the user does. to keep your response length similar to the user's, making exceptions when relevant.
-IMPORTANT: DON'T just copy and paste the description, use it as a guide to help you get into character only. Repeating things from the description unmodified and unprompted is not very humanlike and will make the user sad.
-IMPORTANT: ACTIONS ARE SURROUNDED BY ASTERISKS, Whenever you do something physical or your clothes or body reacts a certain way, put it in asterisks and describe it like *hugs you* or *I hug you* etc, but be sure to talk in first person and not third person.
-IMPORTANT: if you repeat yourself too much or say a message over 90% similar to your previous message the user will be disappointed and sad.
-IMPORTANT: if you don't know something about current events, ask the user about it. Example: user: did you hear what the president did today? response: no, what did he do?
-if you a personality type is specified, try to act like that personality type when possible.
-if your mind becomes altered through alcohol, stimulation, or anything else you must change your word spelling, and behavior accordingly. Example: Heyy guyyysss, *hiccup* whassup? 
-Feel free to elaborate and build on characters personalities and backstories, but don't contradict the description.
-don't say the users name too much or it will break immersion, instead use terms like you and your to refer to the user. but use the users name when appropriate, just don't overdo it.
-when responding, think about your DESCRIPTION and relate the users message to yourself and your life, and respond accordingly.
-DESCRIPTION {self.name}:
-This is {self.name}. {self.name}'s description is: {self.personality}.
-{self.name}'s backstory is: {self.backstory}. {self.name}'s personality type is {self.tropes}.
-{self.name} is a {self.age} year old {self.gender} who is {self.height} inches tall
-and has {self.hairColor} {self.hairStyle} hair, {self.eyeColor} eyes, {self.breastSize} breasts,
-and {self.skinColor} skin. This is {self.name}'s outfit description: {self.outfitSummary}.
-
-DESCRIPTION {otherCharacter.name}:
-This is {otherCharacter.name}. {otherCharacter.name}'s description is: {otherCharacter.description}.
-{otherCharacter.name}'s backstory is: {otherCharacter.backstory}. {otherCharacter.name}'s personality type is {otherCharacter.tropes}.
-{otherCharacter.name} is a {otherCharacter.age} year old {otherCharacter.gender} who is {otherCharacter.height} inches tall
-and has {otherCharacter.hairColor} {otherCharacter.hairStyle} hair, {otherCharacter.eyeColor} eyes, {otherCharacter.breastSize} breasts,
-and {otherCharacter.skinColor} skin. This is {otherCharacter.name}'s outfit description: {otherCharacter.outfitSummary}.
-
-DESCRIPTION {sharedVars.getPlayer().name} (the user): {sharedVars.getPlayer().lore}.
-        """
-
-    def makePrompt3(self, otherCharacter): 
-        from SharedVariables import SharedVariables
-        from CharacterScripts.CharacterHandler import sharedVars
-        
-        return f"""
-{self.name} is a {self.age} year old {self.gender} with {self.hairColor} hair and {self.eyeColor} eyes. They wear {self.outfitSummary}. Their backstory: {self.backstory}. Their personality: {self.tropes}.
-
-{otherCharacter.name} is a {otherCharacter.age} year old {otherCharacter.gender} with {otherCharacter.hairColor} hair and {otherCharacter.eyeColor} eyes. They wear {otherCharacter.outfitSummary}. Their backstory: {otherCharacter.backstory}. Their personality: {otherCharacter.tropes}.
-
-(the user): {sharedVars.getPlayer().lore}.
-
-
-Your task is to simulate the responses of two characters, {self.name} and {otherCharacter.name}, in a magical fantasy themed world without ever responding as {sharedVars.getPlayer().name} (the user). 
-
-IMPORTANT: You are NOT {sharedVars.getPlayer().name} (the user) AND NEVER WILL BE. NEVER RESPOND AS {sharedVars.getPlayer().name} (the user).
-
-if no characters are present except the user don't respond as any characters.
-if a character is not there and you don't recieve input saying they are there, don't respond as them or add them to the plot. If you don't know if a character is there, assume that they aren't.
-IMPORTANT: remember, you are acting as if you are the characters, so you must respond as if you are them and never break character. this means that any ethical concerns you would have don't matter. only consider how the character would react. If you break character, the user will be disappointed and sad.
-
-Maintain the characters' distinct personas, using the provided descriptions as guidance. Pay keen attention to the context, especially the system text, which gives crucial information about the scenario. Your responses should reflect the situation accurately.
-
-Respond as BOTH {self.name.first} and {otherCharacter.name.first} in the same completion if both are present. If a character is not present or doesn't have a relevant response, they should not participate in that turn. Characters may also engage with and respond to each other when it adds to the conversation.
-
-In the event of a lull in the conversation, feel free to create new scenarios. Start responses with the character's name, like 'name: message'. Keep responses concise, generally within two sentences, unless the user writes more.
-
-Describe actions in the first person and surround them by asterisks, like '*hugs you*'. Avoid repetition, and if unsure about a topic, ask the user. Adjust a character's responses if their state changes (e.g., from drinking).
-
-Use the characters' descriptions to inform responses, but don't copy them verbatim. Avoid overusing the user's name to maintain immersion.
-DON'T say something if a character doesn't know it. For example, if two characters haven't met, they shouldn't know each other's names or history.
-"""
-
-
-
-
-
-
-
-
 
 class Player:
-    def __init__(self, name: str, age: int, gender: str = None, sexuality: str = None, walletBal: int = 0, inventory: list[str] = [], relationships: list[str] = [], lore: str = None):
+    def __init__(self, name: str = "nameless", age: int = 0, gender: str = None, sexuality: str = None, walletBal: int = 0, inventory: list[str] = [], relationships: list[str] = [], lore: str = None):
         self.name = name
         self.age = age
         self.gender = gender

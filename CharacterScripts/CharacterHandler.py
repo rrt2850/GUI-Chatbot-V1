@@ -1,10 +1,18 @@
+"""
+Author: Robert Tetreault (rrt2850)
+Filename: CharacterHandler.py
+Description: This script is the draft for an AI backend manager for a character.
+             the idea is that it will recieve a string from the front end
+             chatbot AI and modify the backend character based on the sentiment
+             and content of the string. It's kind of functional right now, but
+             not enough to use, so it's not being called anywhere yet and doesn't
+             have proper documentation.
+"""
+
 import copy
 import difflib
 import json
 import os
-import sys
-import re
-from typing import Union
 import openai
 
 from SharedVariables import SharedVariables
@@ -67,7 +75,9 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def loadSave():
+def loadSaveDev():
+
+    # TODO rewrite this so that it accesses the dictionaries in a safer way
     if os.path.exists(sharedVars.saveFile):
         print("\033[32mSave file found. Loading...\033[0m")
         try:
@@ -79,13 +89,13 @@ def loadSave():
             characters = {id: Character(**character_dict) for id, character_dict in data["characters"].items()}
 
             # Convert character inventories back to items
-            for key, value in characters.items():
-                new_inventory = []
+            for key, _ in characters.items():
+                newInventory = []
                 for temp in characters[key].inventory:
                     item = Item(temp.get("name"), temp.get("description"))
                     item.quantity = temp.get("quantity")
-                    new_inventory.append(item)
-                characters[key].inventory = new_inventory
+                    newInventory.append(item)
+                characters[key].inventory = newInventory
                 characters[key].name = Name(data["characters"][key]["name"].get("first"), characters[key].name.get("last"))
         
             # Convert item dictionaries back to Item objects
@@ -94,12 +104,18 @@ def loadSave():
                 item = Item(itemDict["name"], itemDict["description"])
                 items[itemName] = item
 
-            # Convert the player dictionary back to a Player object
-            player = Player(**data["player"])
+            # Convert all the player dictionaries back to Player objects
+            players = []
+            for _, playerDict in data["players"].items():
+                player = Player(**playerDict)
+                players.append(player)
 
-            sharedVars.setCharacters(characters)
-            sharedVars.setItems(items)
-            sharedVars.setPlayer(player)
+            # Get the last system message if there is one
+            sharedVars.systemMessage = data.get("systemMessage", None)
+
+            sharedVars.characters = characters
+            sharedVars.items = items
+            sharedVars.players = players
         except Exception as e:
             print(f"\033[31mError loading save file: {e}\033[0m")
             makeNewGame = input("Would you like to start a new game? (y/n) ")
@@ -119,21 +135,25 @@ def loadSave():
 def save():
     print("\033[32mSaving...\033[0m")
     # Convert the Character objects to dictionaries
-    character_dicts = {str(id): character.dict() for id, character in sharedVars.getCharacters().items()}
+    characterDicts = {str(id): character.dict() for id, character in sharedVars.characters.items()}
 
     # Convert the Item objects to dictionaries
-    item_dicts = {id: item.dict() for id, item in sharedVars.getItems().items()}
+    itemDicts = {id: item.dict() for id, item in sharedVars.items.items()}
 
+    playerDict = {}
     # Convert the Player object to a dictionary
-    player_dict = sharedVars.getPlayer().dict()
+    for player in sharedVars.players:
+        player = player.dict()
+        playerDict[player["name"]] = player
 
     # Combine the dictionaries into one
     data = {
-        "characters": character_dicts,
-        "items": item_dicts,
-        "player": player_dict
+        "characters": characterDicts,
+        "items": itemDicts,
+        "players": playerDict,
+        "systemMessage": sharedVars.systemMessage
     }
-    print(data)
+
     # Save the data to a JSON file
     with open(sharedVars.saveFile, "w") as file:
         json.dump(data, file, indent=4)
@@ -149,9 +169,9 @@ def newGame():
     if os.path.exists(sharedVars.saveFile):
         os.remove(sharedVars.saveFile)
 
-    sharedVars.setCharacters(characters)
-    sharedVars.setItems(items)
-    sharedVars.setPlayer(player)
+    sharedVars.characters = characters
+    sharedVars.items = items
+    sharedVars.player = player
     save()
 
 #
@@ -213,12 +233,12 @@ def strInputToJSON(inputStr):
 def getAllCharacters():
     """getAllCharacters() gets a list of all the characters in the game"""
 
-    return sharedVars.getCharacters().keys()
+    return sharedVars.characters.keys()
 
 def getAllItems():
     """getAllItems() gets a list of all the items in the game"""
 
-    return sharedVars.getItems().keys()
+    return sharedVars.items.keys()
 
 def getCharacter(name:str=None):
     """getCharacter(name:str) gets a character by name. If the character isn't found it returns a list of similar names"""
@@ -226,17 +246,17 @@ def getCharacter(name:str=None):
         return "No name given"
     
     similar = []
-    for characterName in sharedVars.getChraracters().keys():
+    for characterName in sharedVars.characters.keys():
         firstName = characterName.lower().split(" ")[0]
         if firstName == name.lower():
-            return sharedVars.getCharacters()[characterName]
+            return sharedVars.characters[characterName]
         if characterName.lower() in name.lower():
             similar.append(characterName)
 
     if len(similar) == 0:
         return f"Character {name} doesn't exist."
     if len(similar) == 1:
-        return sharedVars.getCharacters()[similar[0]], "Success"
+        return sharedVars.characters[similar[0]], "Success"
     if len(similar) > 1:
         return f"Couldn't find character {name}. Did you mean any of these similar names? [{', '.join(similar)}]?"
 
@@ -249,10 +269,10 @@ def itemLookup(itemName: str = None):
     exactMatch = None
     similarItems = []
 
-    for name in sharedVars.getItems().keys():
+    for name in sharedVars.items.keys():
         nameLower = name.lower()
         if nameLower == itemNameLower:
-            return sharedVars.getItems()[name]
+            return sharedVars.items[name]
             
         similarity = difflib.SequenceMatcher(None, itemNameLower, nameLower).ratio()
         if similarity > 0.6:
@@ -265,7 +285,7 @@ def itemLookup(itemName: str = None):
     similarNames = [name for _, name in similarItems]
 
     if len(similarNames) == 1:
-        return sharedVars.getItems()[similarNames[0]]
+        return sharedVars.items[similarNames[0]]
     
     return similarNames
 
@@ -285,7 +305,7 @@ def createItem(itemName:str = None, itemDescription:str=None):
         
     itemName = itemName.lower()
     temp = Item(itemName, itemDescription)
-    sharedVars.getItems()[temp.name] = temp
+    sharedVars.items[temp.name] = temp
     return True, f"Created item: {temp.name}"
 
 def updateItem(itemName:str = None, itemDescription:str=None):
@@ -299,13 +319,13 @@ def updateItem(itemName:str = None, itemDescription:str=None):
         return False, item
 
     item.description = itemDescription
-    for key in sharedVars.getCharacters().keys():
-        for index, i in enumerate(sharedVars.getCharacters()[key].inventory):
+    for key in sharedVars.characters.keys():
+        for index, i in enumerate(sharedVars.characters[key].inventory):
             if i.name == itemName:
                 i.description = itemDescription
-                sharedVars.getCharacters()[key].inventory[index] = i
+                sharedVars.characters[key].inventory[index] = i
 
-    sharedVars.getItems()[itemName] = item
+    sharedVars.items[itemName] = item
     return True, f"Updated item {item.name}'s description to {item.description}"
 
 #
@@ -341,7 +361,7 @@ def ManageOutfit(characterName:str=None, action:str=None, outfitSlot:str=None, i
     
     success = False
     if temp[0]:
-        sharedVars.getCharacters()[temp[0].name] = temp[0]
+        sharedVars.characters[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -366,14 +386,14 @@ def ManageInventory(characterName:str=None, action:str=None, itemName:str=None, 
         if type(item) ==str:
             item = copy.deepcopy(temp[1])
             item.quantity = 0
-            sharedVars.getItems()[item.name] = item
+            sharedVars.items[item.name] = item
     
     item.quantity = itemQuantity
     temp = characterName.manageInventory(item, action)
     
     success = False
     if temp[0]:
-        sharedVars.getCharacters()[temp[0].name] = temp[0]
+        sharedVars.characters[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -390,7 +410,7 @@ def ManageMemory(characterName:str=None, action:str=None, key:str=None, memory:s
     
     success = False
     if temp[0]:
-        sharedVars.getCharacters()[temp[0].name] = temp[0]
+        sharedVars.characters[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -407,7 +427,7 @@ def ChangeAttribute(characterName:str=None, attribute:str=None, amount:int=None)
     
     success = False
     if temp[0]:
-        sharedVars.getCharacters()[temp[0].name] = temp[0]
+        sharedVars.characters[temp[0].name] = temp[0]
         success = True
     return success, temp[1]
 
@@ -434,8 +454,8 @@ def testLoop():
     except FileNotFoundError:
         data = []
 
-    sharedVars.setCurrCharacter(getCharacter("Kasumi"))
-    chat = makeInput(goal=["To be determined"], input=[f"{sharedVars.getCurrCharacter().name.first} puts four apples in her inventory"])
+    sharedVars.currCharacter(getCharacter("Kasumi"))
+    chat = makeInput(goal=["To be determined"], input=[f"{sharedVars.currCharacter.name.first} puts four apples in her inventory"])
     print("\033[32m" + chat + "\033[0m\n")
 
     conversationEntry = {
@@ -491,5 +511,5 @@ def testLoop():
     save()
 
 if __name__ == "__main__":
-    loadSave()
+    loadSaveDev()
     testLoop()

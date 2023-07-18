@@ -6,91 +6,161 @@ if TYPE_CHECKING:
 
 class SharedVariables:
     def __init__(self):
-        self.characters = {}
-        self.items={}
-        self.player=None
-        self.currCharacter=None
-        self.saveFile = "save.json"        
-        self.prompt=None
-        self.systemMessage = None
-        self.gptStuff = {
+        self._devMode = True
+        self._characters = {}
+        self._items={}
+        self._player = None
+        self._players = []
+        self._currCharacter = None
+        self._currCharacter2 = None
+        self._saveFile = "CharacterJsons/save.json"
+        self._chatKey = None        
+        self._prompt = None
+        self._systemMessage = None
+        self._gptStuff = {
             "temperature": 1,
             "topP": 1,
             "maxTokens": 210,
-            "frequencyPenalty": 2,
-            "presencePenalty": 2,
+            "frequencyPenalty": 1.7,
+            "presencePenalty": 1.7,
             "tokenLimit": 3500
         }
-        self.messages = []
+        self._messages = []
 
     #
     #   Getters
     #
-    def getCharacter(self, name):
-        return self.characters.get(name)
 
-    def getCharacters(self):
-        return self.characters
+    @property
+    def devMode(self) -> bool:
+        return self._devMode
     
-    def getItems(self):
-        return self.items
+    @property
+    def characters(self) -> dict:
+        return self._characters
     
-    def getPlayer(self):
-        return self.player
+    @property
+    def items(self) -> dict:
+        return self._items
     
-    def getCurrCharacter(self):
-        return self.currCharacter
-
-    def getSaveFile(self):
-        return self.saveFile
+    @property
+    def player(self) -> 'Player':
+        return self._player
     
-    def getPrompt(self):
-        return self.prompt
+    @property
+    def players(self) -> list:
+        return self._players
     
-    def getSystemMessage(self):
-        return self.systemMessage
+    @property
+    def currCharacter(self) -> 'Character':
+        return self._currCharacter
     
-    def getGptStuff(self):
-        return self.gptStuff
+    @property
+    def currCharacter2(self) -> 'Character':
+        return self._currCharacter2
     
-    def getMessages(self):
-        return self.messages
+    @property
+    def saveFile(self) -> str:
+        return self._saveFile
+    
+    @property
+    def chatKey(self) -> str:
+        return self._chatKey
+    
+    @property
+    def prompt(self) -> str:
+        return self._prompt
+    
+    @property
+    def systemMessage(self) -> str:
+        return self._systemMessage
+    
+    @property
+    def gptStuff(self) -> dict:
+        return self._gptStuff
+    
+    @property
+    def messages(self) -> list:
+        return self._messages
     
     
     #
     #   Setters
     #
 
-    def updateCharacter(self, character):
-        self.characters[character.name] = character
+    @devMode.setter
+    def devMode(self, value: bool):
+        self._devMode = value
 
-    def setCharacters(self, characters:dict):
-        self.characters = characters
+    @characters.setter
+    def characters(self, value: dict):
+        self._characters = value
 
-    def setItems(self, items:dict):
-        self.items = items
+    @items.setter
+    def items(self, value: dict):
+        self._items = value
 
-    def setPlayer(self, player: 'Player'):
-        self.player = player
+    @player.setter
+    def player(self, value: 'Player'): 
+        self._player = value
 
-    def setCurrCharacter(self, currCharacter: 'Character'):
-        self.currCharacter = currCharacter
+    @players.setter
+    def players(self, value: list):
+        self._players = value
     
-    def setSaveFile(self, saveFile:str):
-        self.saveFile = saveFile
+    @currCharacter.setter
+    def currCharacter(self, value: 'Character'):
+        self._currCharacter = value
 
-    def setPrompt(self, prompt:str):
-        self.prompt = prompt
-    
-    def setSystemMessage(self, systemMessage:str):
-        self.systemMessage = systemMessage
-    
-    def setGptStuff(self, gptStuff:dict):
-        self.gptStuff = gptStuff
+    @currCharacter2.setter
+    def currCharacter2(self, value: 'Character'):
+        self._currCharacter2 = value
 
-    def setMessages(self, messages:list):
-        self.messages = messages
-        
+    @saveFile.setter
+    def saveFile(self, value: str):
+        self._saveFile = value
+
+    @chatKey.setter
+    def chatKey(self, value: str):
+        self._chatKey = value
+
+    @prompt.setter
+    def prompt(self, value: str):
+        self._prompt = value
+
+    @systemMessage.setter
+    def systemMessage(self, value: str):
+        self._systemMessage = value
+
+    @gptStuff.setter
+    def gptStuff(self, value: dict):
+        self._gptStuff = value
+
+    @messages.setter
+    def messages(self, value: list):
+        self._messages = value
+
+    #
+    #   Methods
+    #
+
+    def updateCharacter(self, character: 'Character'):
+        self._characters[character.name] = character
+     
     def appendMessage(self, message:dict):
-        self.messages.append(message)
+        self._messages.append(message)
 
+    def appendPlayer(self, player: 'Player'):
+        self._players.append(player)
+
+    def getPlayer(self, name: str) -> 'Player':
+        for player in self._players:
+            if player.name == name:
+                return player
+        return None
+
+    def getCharacter(self, name: str) -> 'Character':
+        return self._characters.get(str(name), None)
+    
+    def getItemTemplate(self, name: str) -> dict:
+        return self._items[name]
