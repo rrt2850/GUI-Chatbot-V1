@@ -20,7 +20,7 @@ class SharedVariables:
         self._gptStuff = {
             "temperature": 1,
             "topP": 1,
-            "maxTokens": 210,
+            "maxTokens": 400,
             "frequencyPenalty": 1.7,
             "presencePenalty": 1.7,
             "tokenLimit": 3500

@@ -25,6 +25,9 @@ ImageGen/apex/
 ImageGen/gfpgan/weights/parsing_parsenet.pth
 ImageGen/gfpgan/weights/detection_Resnet50_Final.pth
 
+OldStuff
+OldStuff/*
+
 CharacterJsons/*.json
 
 save.json

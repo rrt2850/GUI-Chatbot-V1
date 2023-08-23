@@ -1,4 +1,11 @@
-from CharacterScripts.CharacterHandler import sharedVars
+"""
+Author: Robert Tetreault (rrt2850)
+Filename: BuildingClass.py
+Description: A representation of a building in the game, including rooms and their connections.
+Note: uses BFS to dynamically generate a grid of rooms
+"""
+
+from CharacterScripts.DataHandler import sharedVars
 
 opposite = {
     'up': 'down',
@@ -8,6 +15,13 @@ opposite = {
 }
 
 class Room:
+    """
+    A class representing a room in a building. Contains a list of characters and items in the room.
+
+    Note:   Rooms can be connected to other rooms in the building. Connections are stored as tuples
+            Rooms can also be any size and connect to other rooms at any point on their walls
+    """
+
     def __init__(self, name:str, description:str, width, height):
         self.name = name
         self.description = description
@@ -27,6 +41,11 @@ class Room:
 
 
 class Building:
+    """
+    A class representing a building in the game. Contains a list of all rooms and a dynamically
+    generated grid of rooms.
+    """
+
     def __init__(self, name:str, description:str):
         self.name = name
         self.description = description
@@ -83,6 +102,10 @@ class Building:
     
 
 def gymPreset():
+    """
+    A preset for a gym building
+    """
+
     # Create Building
     building = Building("Gym", "A gym")
     entrance = Room("Entrance", "The main entrance to the building", 1, 1)
@@ -106,12 +129,16 @@ def gymPreset():
     building.addRoom(pool, connections=[(tennisCourt, 'left', 0, 0), (tennisCourt, 'left', 1, 1)])
     building.addRoom(yogaRoom, connections=[(lobby, 'left', 0, 0)])
 
-    # Generate and print the building grid
+    # Generate the building grid
     building.makeGrid()
 
     return building
 
 def starterHousePreset():
+    """
+    A preset for a basic house building
+    """
+
     building = Building("Starter House", f"A {sharedVars.player.name} and {sharedVars.currCharacter.name.first}'s house")
     entrance = Room("Entrance", "The main entrance to the house", 1, 1)
     livingRoom = Room("Living Room", "A room with a couch, coffee table, and tv", 1, 2)

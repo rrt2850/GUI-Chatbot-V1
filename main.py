@@ -6,7 +6,7 @@ Description: Main entry point for the chat simulator. This script provides a sta
 """
 
 import json
-from CharacterScripts.CharacterHandler import loadSave, sharedVars
+from CharacterScripts.DataHandler import loadSave, sharedVars
 
 from KivyWidgets.ChatSim import ChatBotApp
 #from KivyWidgets.DisplayBuilding import start

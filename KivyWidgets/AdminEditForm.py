@@ -11,7 +11,7 @@ from attr import field
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 
-from CharacterScripts.CharacterHandler import loadSave, save, sharedVars
+from CharacterScripts.DataHandler import loadSave, save, sharedVars
 from KivyWidgets.ScrollableEditForm import ScrollableForm
 
 def getCharacterFields(char):

@@ -14,7 +14,7 @@ from KivyWidgets.CollapsibleSidebar import CollapsibleSidebar
 from KivyWidgets.ChatWindow import ChatBoxLayout
 from kivy.core.window import Window
 
-from CharacterScripts.CharacterHandler import sharedVars, save
+from CharacterScripts.DataHandler import sharedVars, save
 
 def makeBuilding(functionName=None):
     """

@@ -1,17 +1,11 @@
 from kivy.app import App
-from kivy.clock import Clock
-from kivy.core.window import Window
-from kivy.lang import Builder
-from kivy.properties import ListProperty, NumericProperty, ObjectProperty
+from kivy.properties import ListProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.scatterlayout import ScatterLayout
-from kivy.uix.stacklayout import StackLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
-from WorldScripts.BuildingClass import Building, Room, gymPreset
+from WorldScripts.BuildingClass import gymPreset
 
 
 class SquareLayout(BoxLayout):

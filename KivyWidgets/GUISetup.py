@@ -11,7 +11,7 @@ from kivy.uix.modalview import ModalView
 from kivy.app import App
 from kivy.core.window import Window
 
-from CharacterScripts.CharacterHandler import loadSave, sharedVars, save
+from CharacterScripts.DataHandler import loadSave, sharedVars, save
 from KivyWidgets.ChatSim import RootWidget
 from KivyWidgets.SetupForms import NewPlayerForm
 

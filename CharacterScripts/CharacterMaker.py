@@ -1,3 +1,12 @@
+"""
+Author:         Robert Tetreault (rrt2850)
+Filename:       CharacterMaker.py
+Description:    A script that uses OpenAI's GPT-3.5 API to generate a character for the game.
+Note:           This script is currently not used because the technology wasn't advanced enough to
+                match the quality of the characters I wanted to generate at the time, but now that
+                we can train our own 3.5 turbo models, I might revisit this idea.
+"""
+
 import os
 
 import openai

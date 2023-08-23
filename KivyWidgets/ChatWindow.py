@@ -8,7 +8,6 @@ Description: This script contains the constructors and functions used by the cha
 import json
 import os
 import re
-import threading
 
 import dotenv
 import openai
@@ -18,11 +17,10 @@ from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
-from CharacterScripts.CharacterHandler import sharedVars
+from CharacterScripts.DataHandler import sharedVars
 
 # set up environment variables
 dotenv.load_dotenv()
@@ -400,7 +398,7 @@ class ChatBoxLayout(BoxLayout):
             removedMessage = messages.pop(0)
 
             # If the prompt was removed, add it closer to the end of the list
-            if "~!~!~" in removedMessage["content"]:
+            if "~!~!~" in removedMessage["content"] or removedMessage["role"] == "system":
                 if len(messages) < 5:
                     messages.insert(-2, removedMessage)
                 messages.insert(-5, removedMessage)

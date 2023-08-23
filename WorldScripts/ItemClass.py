@@ -1,4 +1,8 @@
 class Item:
+    """
+    A class to represent an item in the game.
+    """
+
     def __init__(self, name, description):
         self.name = name
         self.quantity = 0
