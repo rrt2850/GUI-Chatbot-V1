@@ -21,8 +21,9 @@ from CharacterScripts.CharacterClass import Character, Player
 sharedVars = SharedVariables()
 
 def loadSave():
-
-    # TODO rewrite this so that it accesses the dictionaries in a safer way
+    """
+    Loads the save file if it exists, otherwise it asks the user if they'd like to start a new game
+    """
     if os.path.exists(sharedVars.saveFile):
         print("\033[32mSave file found. Loading...\033[0m")
         try:
@@ -30,8 +31,14 @@ def loadSave():
             with open(sharedVars.saveFile, "r") as file:
                 data = json.load(file)
 
-            # Convert character dictionaries back to Character objects
-            characters = {id: Character(**character_dict) for id, character_dict in data["characters"].items()}
+            if data.get("characters") is None:
+                # If there are no characters, create an empty dictionary for now
+                # Later on, the user will be able to generate characters
+                data["characters"] = {}
+
+            else:
+                # Convert character dictionaries back to Character objects
+                characters = {id: Character(**characterDict) for id, characterDict in data["characters"].items()}
 
             # Convert character inventories back to items
             for key, _ in characters.items():
@@ -55,11 +62,14 @@ def loadSave():
                 player = Player(**playerDict)
                 players.append(player)
 
+            
             # Get the last system message if there is one
-            sharedVars.systemMessage = data.get("systemMessage", None)
+            # TODO make this work with multiple players
+            sharedVars.setting = data.get("systemMessage", None)
             sharedVars.characters = characters
             sharedVars.items = items
             sharedVars.players = players
+
         except Exception as e:
             print(f"\033[31mError loading save file: {e}\033[0m")
             makeNewGame = input("Would you like to start a new game? (y/n) ")
@@ -95,7 +105,7 @@ def save():
         "characters": characterDicts,
         "items": itemDicts,
         "players": playerDict,
-        "systemMessage": sharedVars.systemMessage
+        "systemMessage": sharedVars.setting
     }
 
     # Save the data to a JSON file

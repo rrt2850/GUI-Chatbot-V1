@@ -16,7 +16,7 @@ class SharedVariables:
         self._saveFile = "CharacterJsons/save.json"
         self._chatKey = None        
         self._prompt = None
-        self._systemMessage = None
+        self._setting = None
         self._gptStuff = {
             "temperature": 1,
             "topP": 1,
@@ -72,8 +72,8 @@ class SharedVariables:
         return self._prompt
     
     @property
-    def systemMessage(self) -> str:
-        return self._systemMessage
+    def setting(self) -> str:
+        return self._setting
     
     @property
     def gptStuff(self) -> dict:
@@ -128,9 +128,9 @@ class SharedVariables:
     def prompt(self, value: str):
         self._prompt = value
 
-    @systemMessage.setter
-    def systemMessage(self, value: str):
-        self._systemMessage = value
+    @setting.setter
+    def setting(self, value: str):
+        self._setting = value
 
     @gptStuff.setter
     def gptStuff(self, value: dict):

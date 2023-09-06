@@ -37,7 +37,6 @@ class Startup(App):
         # initialize title and icon
         if sharedVars.devMode:
             self.title = 'b-b-b-buss'
-            self.icon = 'dreamybull.jpg'
         else:
             self.title = 'super neat robo-girlfriend, name tbd'
 
@@ -136,15 +135,15 @@ class Startup(App):
 
         # Clear the screen
         self.inputs.clear_widgets()
-        
-        # if there is no system message, set it to the default. feel free to change the default to whatever you want
-        if sharedVars.systemMessage is None:
-            sharedVars.systemMessage = f"*{sharedVars.player.name} is smoking on the couch with {sharedVars.currCharacter.name.first}. The mood is relaxed*"
+        if sharedVars.player.charLores:
+            loreInfo = sharedVars.player.charLores.get(repr(sharedVars.currCharacter.name), None)
+            sharedVars.player.setting = loreInfo.get("setting", None) if loreInfo else ""
+            sharedVars.player.lore = loreInfo.get("lore", None) if loreInfo else ""
 
         # System message text input
-        self.systemMessageInput = TextInput(text=sharedVars.systemMessage)
-        self.inputs.add_widget(Label(text="Edit system message:"))
-        self.inputs.add_widget(self.systemMessageInput)
+        self.currSettingInput = TextInput(text=sharedVars.player.setting)
+        self.inputs.add_widget(Label(text="Edit the current setting:"))
+        self.inputs.add_widget(self.currSettingInput)
 
         # Lore text input
         self.loreInput = TextInput(text=sharedVars.player.lore)
@@ -163,7 +162,8 @@ class Startup(App):
     
     def startConversation(self, instance):
         # Set system message
-        sharedVars.systemMessage = self.systemMessageInput.text
+        sharedVars.setting = self.currSettingInput.text
+        sharedVars.player.setting = self.currSettingInput.text
         sharedVars.player.lore = self.loreInput.text
         
         # Generate initial prompt
@@ -193,6 +193,8 @@ class Startup(App):
                     character.personality = character.personality.replace('Robert', sharedVars.player.name)
                 if 'Robert' in character.backstory:
                     character.backstory = character.backstory.replace('Robert', sharedVars.player.name)
+
+        sharedVars.player.charLores[sharedVars.chatKey] = {"setting": self.currSettingInput.text, "lore": self.loreInput.text}
 
         # Start the chat
         self.layout.clear_widgets()

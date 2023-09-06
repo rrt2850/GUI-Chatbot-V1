@@ -173,7 +173,7 @@ class ChatBoxLayout(BoxLayout):
         self.presencePenalty = temp["presencePenalty"]
         self.tokenLimit = temp["tokenLimit"]
         self.prompt = sharedVars.prompt
-        self.systemMessage = sharedVars.systemMessage
+        self.systemMessage = sharedVars.setting
 
     def loadMessages(self):
         """

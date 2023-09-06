@@ -71,13 +71,12 @@ def startDev():
     sharedVars.currCharacter = currCharacter
     sharedVars.currCharacter2 = currCharacter2
 
-
-    # if there is no system message, set it to the default. feel free to change the default to whatever you want
-    if sharedVars.systemMessage is None:
-        systemMessage = f"*{sharedVars.player.name} is smoking on the couch with {sharedVars.currCharacter.name.first}. The mood is relaxed*"
+    # if there is no setting, set it to the default. feel free to change the default to whatever you want
+    if sharedVars.setting is None:
+        setting = f"*{sharedVars.player.name} is chilling with {sharedVars.currCharacter.name.first}. The mood is relaxed*"
 
     # Set the system message and prompt in shared variables
-    sharedVars.systemMessage = systemMessage
+    sharedVars.setting = setting
 
     # Generate the initial prompt and system message
     prompt = currCharacter.makePrompt()

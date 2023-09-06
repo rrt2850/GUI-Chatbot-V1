@@ -671,7 +671,7 @@ here is some information about the user: The user's name is {player.name}, they 
         """
 
 class Player:
-    def __init__(self, name: str = "nameless", age: int = 0, gender: str = None, sexuality: str = None, walletBal: int = 0, inventory: list[str] = [], relationships: list[str] = [], lore: str = None):
+    def __init__(self, name: str = "nameless", age: int = 0, gender: str = None, sexuality: str = None, walletBal: int = 0, inventory: list[str] = [], relationships: list[str] = [], lore: str = None, setting: str = None, charLores: dict = None):
         self.name = name
         self.age = age
         self.gender = gender
@@ -680,6 +680,8 @@ class Player:
         self.relationships = relationships
         self.inventory = inventory
         self.lore = lore or f""
+        self.setting = setting or f""
+        self.charLores = charLores or {}
 
     def __repr__(self):
         return f"Player:[name: {self.name}, age: {self.age}, gender: {self.gender}, sexuality: {self.sexuality}, walletBal: {self.walletBal}, relationships: [{str(self.relationships)}], inventory: [{str(self.inventory)}]]"
@@ -693,5 +695,7 @@ class Player:
             "walletBal": self.walletBal,
             "relationships": self.relationships,
             "inventory": self.inventory,
-            "lore": self.lore
+            "lore": self.lore,
+            "setting": self.setting,
+            "charLores": self.charLores
         }

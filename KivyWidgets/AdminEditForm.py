@@ -65,12 +65,12 @@ class EditForm(BoxLayout):
         sharedVars.prompt = newPrompt
 
         newSystemMessage = self.form.text_inputs["System Message"].text
-        currSystemMessage = sharedVars.systemMessage
+        currSystemMessage = sharedVars.setting
 
         # If the system message has changed, update it
         if newSystemMessage != currSystemMessage:
             self.updateHistory(newSystemMessage, messages, "system")    # Update chatHistory with new system message
-            sharedVars.systemMessage = newSystemMessage                 # Update sharedVars
+            sharedVars.setting = newSystemMessage                 # Update sharedVars
             self.parent.parent.parent.chatBox.chatLoop()                # get a new response from the chatbot
 
         self.parent.parent.toggleSidebar(None)  # Close the form
@@ -167,7 +167,7 @@ class EditForm(BoxLayout):
 
         # set up the player fields of the form
         formNames = ["Player Name", "Player Lore", "System Message"]
-        formText = [player.name, player.lore, sharedVars.systemMessage]
+        formText = [player.name, player.lore, sharedVars.setting]
 
         # set up the character fields of the form
         formNames.extend(getCharacterFields(char1))
@@ -204,7 +204,7 @@ class MyApp(App):
         frequencyPenalty=2
         presencePenalty=2
         tokenLimit=3500
-        sharedVars.systemMessage = systemMessage
+        sharedVars.setting = systemMessage
         sharedVars.gptStuff = {
             "temperature": temperature,
             "topP": topP,
