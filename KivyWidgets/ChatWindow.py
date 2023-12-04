@@ -9,9 +9,14 @@ import json
 import os
 import re
 
+        
 import dotenv
 import openai
 import tiktoken
+
+
+os.environ["KIVY_NO_CONSOLELOG"] = "1"
+os.environ['KIVY_TEXT'] = 'pil'
 
 from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
@@ -71,8 +76,7 @@ class ChatBoxLayout(BoxLayout):
 
     def setupUIComponents(self):
         """
-        builds the layout of the chat box, I'm considering moving all the smaller constructors outside of this class to make it easier to read
-        and to save space but it would be a pain so I'm not doing it until I get frustrated enough with scrolling.
+        Makes the scroll view and input box and adds them to the layout
         """
         self.setupScrollView()
         self.setupInputLayout()

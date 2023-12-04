@@ -120,7 +120,7 @@ if __name__ == '__main__':
         # Set the kivy console to so that it doesn't display debug messages
         import os
         os.environ["KIVY_NO_CONSOLELOG"] = "1"
-
+        os.environ['KIVY_TEXT'] = 'pil'
         # Load the environment variable that was just set
         import dotenv
         from KivyWidgets.GUISetup import Startup

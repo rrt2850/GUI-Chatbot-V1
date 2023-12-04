@@ -18,9 +18,9 @@ class NewPlayerForm(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
-        self.formNames = ["Name", "Age", "Gender", "Sexuality", "Lore"]
-        self.formText = ["What's your name?", "How old are you?", "What is your gender?", "What is your sexuality?", "Any extra info?"]
-        self.form = ScrollableForm(self.submit, self.formNames, self.formText)
+        self.formNames = ["Name", "Age", "Gender", "Sexuality"]
+        self.formText = ["What's your name?", "How old are you?", "What is your gender?", "What is your sexuality?"]
+        self.form = ScrollableForm(self.submit, self.formNames, self.formText, defaultText=True)
 
         self.add_widget(self.form)
 
@@ -28,7 +28,15 @@ class NewPlayerForm(BoxLayout):
         player = Player()
 
         for field in self.formNames:
-            player.__setattr__(field.lower(), self.form.text_inputs[field].text)
+            if self.form.text_inputs[field].defaultText == self.form.text_inputs[field].text:
+                if field == "Name":
+                    self.parent.dismiss()
+                    return
+
+                player.__setattr__(field.lower(), "null")
+
+            else: player.__setattr__(field.lower(), self.form.text_inputs[field].text)
+        
         
         sharedVars.players.append(player)
         self.parent.dismiss()

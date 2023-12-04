@@ -14,9 +14,7 @@ from SharedVariables import SharedVariables
 
 from WorldScripts.ItemClass import Item
 
-from CharacterScripts.CharacterClass import Character, Name
-from CharacterScripts.CharacterMaker import Player, makeCharacter
-from CharacterScripts.CharacterClass import Character, Player
+from CharacterScripts.CharacterClass import Character, Name, Player
 
 sharedVars = SharedVariables()
 

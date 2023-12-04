@@ -14,6 +14,7 @@ from kivy.core.window import Window
 from CharacterScripts.DataHandler import loadSave, sharedVars, save
 from KivyWidgets.ChatSim import RootWidget
 from KivyWidgets.SetupForms import NewPlayerForm
+from KivyWidgets.ClearableInput import ClearableTextInput
 
 kivy.require('2.0.0')
 
@@ -47,6 +48,19 @@ class Startup(App):
         # Check if there are no players, if so, print an error message and exit the function
         if not players:
             self.inputs.add_widget(Label(text='Error: No players found'))
+        
+        self.populateButtons()
+
+        return self.layout
+
+    def populateButtons(self):
+        # Create a list of characters from shared variables
+        characters = list(sharedVars.characters.values())
+        players = sharedVars.players
+
+        # Check if there are no players, if so, print an error message and exit the function
+        if not players:
+            self.inputs.add_widget(Label(text='Error: No players found'))
 
         self.playerButtons = []
         self.characterButtons = []
@@ -59,7 +73,7 @@ class Startup(App):
                 self.playerButtons.append(btn)
                 self.inputs.add_widget(btn)
 
-        self.newPlayer = Button(text='New Player', on_press=self.newPlayer)
+        self.newPlayer = Button(text='New Player', on_press=self.handleNewPlayer)
         self.inputs.add_widget(self.newPlayer)
 
         # Check if there are no characters, if so, print an error message and exit the function
@@ -80,24 +94,31 @@ class Startup(App):
         startButton = Button(text='Start', on_press=self.startChat)
         self.inputs.add_widget(startButton)
 
-        return self.layout
+    def refreshButtons(self, instance):
+        self.inputs.clear_widgets()
+        self.populateButtons()
 
-    def newPlayer(self, instance):
-        modalView = ModalView()
+    def handleNewPlayer(self, instance):
+        modalView = ModalView(on_dismiss=self.refreshButtons)
         modalView.add_widget(NewPlayerForm())
         modalView.open()
 
     def selectPlayer(self, index):
         def callback(instance):
-            sharedVars.player = sharedVars.players[index]
-            instance.background_color = (0, 1, 0, 1)  # change button color to green
-
-            # reset color for all other player buttons
-            for button in self.playerButtons:
-                if button != instance:
-                    button.background_color = (1, 1, 1, 1)  # change button color to default (white)
+            # If the player is already selected, deselect them
+            if hasattr(self, 'selectedPlayerButton') and self.selectedPlayerButton == instance:
+                sharedVars.player = None
+                instance.background_color = (1, 1, 1, 1)  # change button color to default (white)
+                del self.selectedPlayerButton  # delete the reference to the selected player button
+            else:
+                sharedVars.player = sharedVars.players[index]
+                instance.background_color = (0, 1, 0, 1)  # change button color to green
+                if hasattr(self, 'selectedPlayerButton'):
+                    self.selectedPlayerButton.background_color = (1, 1, 1, 1)  # reset color for previously selected player button
+                self.selectedPlayerButton = instance  # store the reference to the newly selected player button
 
         return callback
+
 
     def selectCharacter(self, name):
         def callback(instance):
@@ -141,12 +162,19 @@ class Startup(App):
             sharedVars.player.lore = loreInfo.get("lore", None) if loreInfo else ""
 
         # System message text input
-        self.currSettingInput = TextInput(text=sharedVars.player.setting)
+        self.currSettingInput = ClearableTextInput(defaultText="Enter a setting/situation here")
+        if sharedVars.player.setting and sharedVars.player.setting != "Enter a setting/situation here":
+            self.currSettingInput.text = sharedVars.player.setting
+        
+
         self.inputs.add_widget(Label(text="Edit the current setting:"))
         self.inputs.add_widget(self.currSettingInput)
 
         # Lore text input
-        self.loreInput = TextInput(text=sharedVars.player.lore)
+        self.loreInput = ClearableTextInput(defaultText="Enter player lore here")
+        if sharedVars.player.lore and sharedVars.player.lore != "Enter player lore here":
+            self.loreInput.text = sharedVars.player.lore
+
         self.inputs.add_widget(Label(text="Edit player lore:"))
         self.inputs.add_widget(self.loreInput)
 
@@ -159,7 +187,7 @@ class Startup(App):
         # Label to display the prompt
         self.promptLabel = Label()
         self.inputs.add_widget(self.promptLabel)
-    
+
     def startConversation(self, instance):
         # Set system message
         sharedVars.setting = self.currSettingInput.text

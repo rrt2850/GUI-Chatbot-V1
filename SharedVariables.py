@@ -23,7 +23,7 @@ class SharedVariables:
             "maxTokens": 400,
             "frequencyPenalty": 1.7,
             "presencePenalty": 1.7,
-            "tokenLimit": 3500
+            "tokenLimit": 3400
         }
         self._messages = []
 
