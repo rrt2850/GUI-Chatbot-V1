@@ -12,6 +12,7 @@ class EditFormTextInput(ClearableTextInput):
         self.multiline = True  # allows for multiple lines
         self.size_hint_y = None  # necessary for scrollview
         self.bind(minimum_height=self.setter('height'))  # bind minimum height to height of the TextInput
+        self.defaultText = kwargs.get('defaultText', False)
 
 class ScrollableForm(BoxLayout):
     def __init__(self, on_button_press, formNames=[], formText=[], defaultText=False, **kwargs):

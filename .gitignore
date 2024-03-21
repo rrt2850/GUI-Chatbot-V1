@@ -28,7 +28,10 @@ ImageGen/gfpgan/weights/detection_Resnet50_Final.pth
 OldStuff
 OldStuff/*
 
-CharacterJsons/*.json
+CharacterJsons/*
 
 save.json
 dreamybull.jpg
+trainingForma
+
+Ignore/*
